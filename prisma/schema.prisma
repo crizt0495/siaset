@@ -1,0 +1,254 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum KondisiBarang {
+  Baik
+  Rusak
+  Hilang
+}
+
+enum StatusBarang {
+  Aktif
+  Nonaktif
+}
+
+enum StatusPeminjaman {
+  Dipinjam
+  Dikembalikan
+}
+
+model User {
+  id          String   @id @default(cuid())
+  namaLengkap String   @map("nama_lengkap")
+  username    String   @unique
+  komisiId    String?  @map("komisi_id")
+  fotoProfil  String?  @map("foto_profil")
+  password    String
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  komisi           Komisi?          @relation(fields: [komisiId], references: [id])
+  peminjamanDibuat Peminjaman[]     @relation("PeminjamanCreatedBy")
+  mutasi           Mutasi[]
+  penghapusan      Penghapusan[]
+  pemeliharaan     Pemeliharaan[]
+  aktivitas        Aktivitas[]
+  session          Session[]
+  roles            UserRole[]
+  userPermissions  UserPermission[]
+  barangs          Barang[]
+
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Komisi {
+  id         String   @id @default(cuid())
+  namaKomisi String   @unique @map("nama_komisi")
+  keterangan String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  users  User[]
+  barang Barang[]
+
+  @@map("komisi")
+}
+
+model Barang {
+  id               String        @id @default(cuid())
+  kodeBarang       String        @unique @map("kode_barang")
+  namaBarang       String        @map("nama_barang")
+  komisiId         String?       @map("komisi_id")
+  userId           String?       @map("user_id")
+  spesifikasi      String?
+  kondisi          KondisiBarang @default(Baik)
+  lokasi           String
+  tanggalPerolehan DateTime      @map("tanggal_perolehan")
+  sumberPerolehan  String        @map("sumber_perolehan")
+  hargaPerolehan   Decimal       @map("harga_perolehan") @db.Decimal(15, 2)
+  fotoBarang       String?       @map("foto_barang")
+  qrCode           String?       @map("qr_code")
+  status           StatusBarang  @default(Aktif)
+  jumlah           Int           @default(0)
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  komisi       Komisi?        @relation(fields: [komisiId], references: [id])
+  user         User?          @relation(fields: [userId], references: [id])
+  peminjaman   Peminjaman[]
+  mutasi       Mutasi[]
+  penghapusan  Penghapusan[]
+  pemeliharaan Pemeliharaan[]
+
+  @@map("barang")
+}
+
+model Peminjaman {
+  id             String           @id @default(cuid())
+  barangId       String           @map("barang_id")
+  jumlahDipinjam Int              @default(1) @map("jumlah_dipinjam")
+  peminjam       String
+  tanggalPinjam  DateTime         @map("tanggal_pinjam")
+  tanggalKembali DateTime?        @map("tanggal_kembali")
+  keterangan     String?
+  status         StatusPeminjaman @default(Dipinjam)
+  createdBy      String?          @map("created_by")
+  qrCode         String?          @map("qr_code")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  barang        Barang @relation(fields: [barangId], references: [id], onDelete: Cascade)
+  createdByUser User?  @relation("PeminjamanCreatedBy", fields: [createdBy], references: [id])
+
+  @@map("peminjaman")
+}
+
+model Mutasi {
+  id            String   @id @default(cuid())
+  barangId      String   @map("barang_id")
+  lokasiAsal    String   @map("lokasi_asal")
+  lokasiTujuan  String   @map("lokasi_tujuan")
+  tanggalMutasi DateTime @map("tanggal_mutasi")
+  keterangan    String?
+  userId        String?  @map("user_id")
+  qrCode        String?  @map("qr_code")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  barang Barang @relation(fields: [barangId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id])
+
+  @@map("mutasi")
+}
+
+model Penghapusan {
+  id                 String   @id @default(cuid())
+  barangId           String   @map("barang_id")
+  tanggalPenghapusan DateTime @map("tanggal_penghapusan")
+  alasan             String
+  keterangan         String?
+  userId             String?  @map("user_id")
+  qrCode             String?  @map("qr_code")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  barang Barang @relation(fields: [barangId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id])
+
+  @@map("penghapusan")
+}
+
+model Pemeliharaan {
+  id         String   @id @default(cuid())
+  barangId   String   @map("barang_id")
+  tanggal    DateTime
+  biaya      Decimal  @db.Decimal(15, 2)
+  keterangan String?
+  userId     String?  @map("user_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  barang Barang @relation(fields: [barangId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id])
+
+  @@map("pemeliharaan")
+}
+
+model Aktivitas {
+  id        String   @id @default(cuid())
+  userId    String?  @map("user_id")
+  aktivitas String
+  waktu     DateTime @default(now())
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  meta      Json?
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("aktivitas")
+}
+
+model Role {
+  id   String @id @default(cuid())
+  name String @unique
+
+  permissions RolePermission[]
+  users       UserRole[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id   String @id @default(cuid())
+  name String @unique
+
+  roles RolePermission[]
+  users UserPermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_has_permissions")
+}
+
+model UserRole {
+  userId String
+  roleId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("model_has_roles")
+}
+
+model UserPermission {
+  userId       String
+  permissionId String
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, permissionId])
+  @@map("model_has_permissions")
+}
+
+model QrScanLog {
+  id             String   @id @default(cuid())
+  scanType       String   @map("scan_type")
+  modelId        String   @map("model_id")
+  modelType      String   @map("model_type")
+  qrCodeContent  String   @map("qr_code_content")
+  ipAddress      String?  @map("ip_address")
+  userAgent      String?  @map("user_agent")
+  additionalData Json?    @map("additional_data")
+  scannedAt      DateTime @default(now()) @map("scanned_at")
+
+  @@map("qr_scan_logs")
+}
