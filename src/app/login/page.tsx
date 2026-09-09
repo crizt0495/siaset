@@ -34,7 +34,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-paper relative overflow-hidden flex items-center justify-center p-5">
+    <div className="min-h-dvh bg-paper relative overflow-hidden flex items-center justify-center px-4 py-6">
       {/* Decorative background */}
       <div className="absolute inset-0 brut-stripe pointer-events-none" />
       <div className="absolute top-8 -left-16 w-56 h-56 bg-primary border-[3px] border-ink rotate-12 pointer-events-none hidden md:block" />
@@ -64,7 +64,7 @@ export default function LoginPage() {
         {/* Stacked shadow card */}
         <div className="relative">
           <div className="absolute inset-0 translate-x-3 translate-y-3 bg-ink border-[3px] border-ink" />
-          <div className="relative bg-card border-[3px] border-ink p-8 sm:p-10 rotate-[-0.6deg] hover:rotate-0 transition-transform duration-200">
+          <div className="relative bg-card border-[3px] border-ink p-6 sm:p-10 rotate-[-0.6deg] sm:hover:rotate-0 transition-transform duration-200">
             {/* Sticker badges */}
             <div className="brut-sticker w-14 h-14 text-xl -rotate-6 mb-5">
               <Boxes className="w-7 h-7" strokeWidth={3} />

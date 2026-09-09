@@ -9,7 +9,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
 
   return (
     <Providers>
-      <div className="min-h-screen bg-paper">
+      <div className="min-h-dvh bg-paper">
         <Sidebar>{children}</Sidebar>
       </div>
     </Providers>

@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback, type ElementType } from "react"
 import {
   LayoutDashboard, Package, ArrowRightLeft, Repeat, Trash2,
   Wrench, Users, Shield, Database, ChevronLeft,
-  ChevronRight, LogOut, Sun, Moon, Menu, X, ClipboardList, Boxes
+  ChevronRight, LogOut, Sun, Moon, ClipboardList, Boxes, LayoutGrid, X
 } from "lucide-react"
 
 type MenuItem = { label: string; href: string; icon: ElementType; role?: string; tag?: string }
@@ -40,14 +40,53 @@ const menuItems: (MenuItem | MenuSection)[] = [
   },
 ]
 
+type Tab = { label: string; href: string | null; icon: ElementType }
+const tabs: Tab[] = [
+  { label: "Beranda", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Aset", href: "/barang", icon: Package },
+  { label: "Transaksi", href: "/peminjaman", icon: ArrowRightLeft },
+  { label: "Mutasi", href: "/mutasi", icon: Repeat },
+  { label: "Menu", href: null, icon: LayoutGrid },
+]
+
+const sheetItems: MenuItem[] = [
+  { label: "Laporan", href: "/reports", icon: ClipboardList, tag: "07" },
+  { label: "Penghapusan", href: "/penghapusan", icon: Trash2, tag: "05" },
+  { label: "Pemeliharaan", href: "/pemeliharaan", icon: Wrench, tag: "06" },
+  { label: "Komisi", href: "/komisi", icon: Users, tag: "08" },
+  { label: "Pengguna", href: "/pengguna", icon: Shield, role: "Superadmin", tag: "09" },
+  { label: "Backup", href: "/backup", icon: Database, role: "Superadmin", tag: "10" },
+]
+
+const pageTitles: { path: string; title: string }[] = [
+  { path: "/dashboard", title: "Beranda" },
+  { path: "/barang", title: "Barang & Aset" },
+  { path: "/peminjaman", title: "Peminjaman" },
+  { path: "/mutasi", title: "Mutasi" },
+  { path: "/penghapusan", title: "Penghapusan" },
+  { path: "/pemeliharaan", title: "Pemeliharaan" },
+  { path: "/reports", title: "Laporan" },
+  { path: "/komisi", title: "Komisi" },
+  { path: "/pengguna", title: "Pengguna" },
+  { path: "/backup", title: "Backup" },
+]
+
+function getTitle(pathname: string): string {
+  for (const p of pageTitles) {
+    if (pathname === p.path || pathname.startsWith(p.path + "/")) return p.title
+  }
+  return "SiAset"
+}
+
 interface SidebarNavProps {
   collapsed: boolean
   isSuperadmin: boolean
   isActive: (href: string) => boolean
   onNavigate: () => void
+  onToggleCollapse: () => void
 }
 
-function SidebarNav({ collapsed, isSuperadmin, isActive, onNavigate }: SidebarNavProps) {
+function SidebarNav({ collapsed, isSuperadmin, isActive, onNavigate, onToggleCollapse }: SidebarNavProps) {
   return (
     <div className="flex flex-col h-full">
       <div className="relative p-4 border-b-[3px] border-ink bg-ink flex items-center gap-3 overflow-hidden">
@@ -62,11 +101,6 @@ function SidebarNav({ collapsed, isSuperadmin, isActive, onNavigate }: SidebarNa
             </p>
           </div>
         )}
-        <span className="absolute -right-4 top-1/2 -translate-y-1/2 hidden">
-          <svg className="w-16 h-16 text-paper/10 fill-current" viewBox="0 0 24 24">
-            <path d="M6 0l6 6-6 6-6-6z" />
-          </svg>
-        </span>
       </div>
 
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-4">
@@ -151,7 +185,7 @@ function SidebarNav({ collapsed, isSuperadmin, isActive, onNavigate }: SidebarNa
 
       <div className="p-3 border-t-[3px] border-ink bg-paper2">
         <button
-          onClick={() => {}}
+          onClick={onToggleCollapse}
           className="w-full flex items-center justify-center gap-2 border-[3px] border-ink bg-card px-3 py-2 text-sm font-bold uppercase tracking-wider text-ink hover:bg-warn transition-colors"
         >
           {collapsed ? <ChevronRight className="w-4 h-4" strokeWidth={3} /> : <ChevronLeft className="w-4 h-4" strokeWidth={3} />}
@@ -166,8 +200,8 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { data: session } = useSession()
   const [collapsed, setCollapsed] = useState(false)
-  const [mobileOpen, setMobileOpen] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
+  const [sheetOpen, setSheetOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   const userRoles: string[] = (session?.user as Record<string, unknown>)?.roles as string[] || []
@@ -200,59 +234,56 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
     }
   }, [collapsed, mounted])
 
+  useEffect(() => {
+    setSheetOpen(false)
+  }, [pathname])
+
   const isActive = useCallback((href: string) => pathname === href || pathname.startsWith(href + "/"), [pathname])
 
-  const handleNavigate = useCallback(() => setMobileOpen(false), [])
-
   const sessionUser = session?.user as Record<string, unknown> | undefined
+  const pageTitle = getTitle(pathname)
+  const visibleSheetItems = sheetItems.filter((item) => !(item.role === "Superadmin" && !isSuperadmin))
 
   return (
     <>
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="brut-btn no-print fixed top-4 left-4 z-50 !p-2.5 !shadow-none"
-        aria-label="Buka menu"
-      >
-        <Menu className="w-5 h-5" strokeWidth={3} />
-      </button>
-
-      {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 bg-ink/80 brut-stripe" onClick={() => setMobileOpen(false)}>
-          <div
-            className="absolute left-0 top-0 h-full w-[17rem] bg-paper shadow-[6px_0_0_0_#000]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setMobileOpen(false)}
-              className="absolute top-4 right-4 z-10 p-1.5 bg-card border-[3px] border-ink text-ink hover:bg-danger hover:text-white"
-              aria-label="Tutup"
-            >
-              <X className="w-5 h-5" strokeWidth={3} />
-            </button>
-            <SidebarNav collapsed={false} isSuperadmin={isSuperadmin} isActive={isActive} onNavigate={handleNavigate} />
-          </div>
-        </div>
-      )}
-
       <aside
         className={`no-print hidden lg:block fixed left-0 top-0 h-full bg-paper border-r-[3px] border-ink z-30 transition-all duration-200 ${
           collapsed ? "w-[4.5rem]" : "w-[16.5rem]"
         }`}
       >
-        <SidebarNav collapsed={collapsed} isSuperadmin={isSuperadmin} isActive={isActive} onNavigate={handleNavigate} />
+        <SidebarNav
+          collapsed={collapsed}
+          isSuperadmin={isSuperadmin}
+          isActive={isActive}
+          onNavigate={() => {}}
+          onToggleCollapse={() => setCollapsed(!collapsed)}
+        />
       </aside>
 
+      {/* Top app bar */}
       <header
-        className={`no-print fixed top-0 right-0 h-16 bg-paper/90 backdrop-blur-md border-b-[3px] border-ink z-20 flex items-center justify-between px-4 transition-all duration-200 ${
+        className={`no-print fixed top-0 left-0 right-0 z-30 h-14 lg:h-16 bg-paper/90 backdrop-blur-md border-b-[3px] border-ink flex items-center justify-between px-3 lg:px-4 transition-all duration-200 ${
           collapsed ? "lg:left-[4.5rem]" : "lg:left-[16.5rem]"
-        } left-0`}
+        }`}
       >
-        <div className="lg:hidden w-12" />
-        <div className="flex items-center gap-3 ml-12 lg:ml-0">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="lg:hidden w-9 h-9 brut-sticker text-[0.55rem] -rotate-3 shrink-0">
+            <Boxes className="w-5 h-5" strokeWidth={3} />
+          </span>
+          <div className="min-w-0">
+            <p className="brut-title text-base lg:text-lg leading-none truncate">{pageTitle}</p>
+            <p className="hidden lg:block text-[0.6rem] font-bold text-muted uppercase tracking-[0.2em] mt-1">
+              SiAset · GKJW Probolinggo
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setDarkMode(!darkMode)}
             className="brut-iconbtn"
             title={darkMode ? "Mode terang" : "Mode gelap"}
+            aria-label={darkMode ? "Mode terang" : "Mode gelap"}
           >
             {darkMode ? <Sun className="w-5 h-5" strokeWidth={3} /> : <Moon className="w-5 h-5" strokeWidth={3} />}
           </button>
@@ -260,7 +291,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
             <div className="w-9 h-9 bg-warn border-[3px] border-ink grid place-items-center text-ink font-display text-sm rotate-[-4deg]">
               {(sessionUser?.namaLengkap as string)?.[0]?.toUpperCase() || "U"}
             </div>
-            <div className="hidden sm:block">
+            <div className="hidden lg:block">
               <p className="text-sm font-bold text-ink leading-tight">
                 {(sessionUser?.namaLengkap as string) || "User"}
               </p>
@@ -272,21 +303,121 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
             className="brut-btn !px-3.5 !py-2 !text-xs"
-            title="Logout"
+            title="Keluar"
           >
             <LogOut className="w-4 h-4" strokeWidth={3} />
-            <span className="hidden sm:inline">Keluar</span>
+            <span className="hidden lg:inline">Keluar</span>
           </button>
         </div>
       </header>
 
+      {/* Main content */}
       <main
-        className={`pt-20 min-h-screen bg-paper transition-all duration-200 ${
+        className={`pt-16 lg:pt-20 min-h-dvh bg-paper transition-all duration-200 ${
           collapsed ? "lg:ml-[4.5rem]" : "lg:ml-[16.5rem]"
         }`}
       >
-        <div className="p-5 lg:p-8 max-w-[1600px]">{children}</div>
+        <div className="px-4 py-5 lg:p-8 pb-32 lg:pb-10 max-w-[1600px]">{children}</div>
       </main>
+
+      {/* Bottom navigation (Android) */}
+      <nav className="no-print lg:hidden fixed bottom-0 inset-x-0 z-40 bg-card border-t-[3px] border-ink safe-bottom">
+        <div className="grid grid-cols-5 h-16">
+          {tabs.map((tab) => {
+            const Icon = tab.icon
+            const active = tab.href ? isActive(tab.href) : sheetOpen
+            const cls = `relative flex flex-col items-center justify-center gap-0.5 ${
+              active ? "text-primary" : "text-muted"
+            }`
+            const indicator = active ? (
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-1 bg-primary" />
+            ) : null
+            if (!tab.href) {
+              return (
+                <button
+                  key={tab.label}
+                  onClick={() => setSheetOpen(!sheetOpen)}
+                  className={cls}
+                  aria-label={tab.label}
+                >
+                  {indicator}
+                  <Icon className="w-5 h-5" strokeWidth={2.75} />
+                  <span className="text-[0.58rem] font-bold uppercase tracking-wide">{tab.label}</span>
+                </button>
+              )
+            }
+            return (
+              <Link key={tab.label} href={tab.href} onClick={() => setSheetOpen(false)} className={cls}>
+                {indicator}
+                <Icon className="w-5 h-5" strokeWidth={2.75} />
+                <span className="text-[0.58rem] font-bold uppercase tracking-wide">{tab.label}</span>
+              </Link>
+            )
+          })}
+        </div>
+      </nav>
+
+      {/* Bottom sheet menu */}
+      {sheetOpen && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-ink/80 brut-stripe" onClick={() => setSheetOpen(false)} />
+          <div className="absolute bottom-0 inset-x-0 brut-sheet bg-paper rounded-t-2xl border-t-[3px] border-ink safe-bottom max-h-[85dvh] overflow-y-auto">
+            <div className="relative flex items-center justify-center pt-3">
+              <span className="h-1.5 w-12 rounded-full bg-ink/30" />
+              <button
+                onClick={() => setSheetOpen(false)}
+                className="absolute right-3 top-1.5 p-2 text-muted active:text-ink"
+                aria-label="Tutup menu"
+              >
+                <X className="w-5 h-5" strokeWidth={3} />
+              </button>
+            </div>
+
+            <p className="px-6 pt-4 pb-2 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Menu</p>
+
+            <div className="grid grid-cols-3 gap-3 px-6 pb-6 pt-2">
+              {visibleSheetItems.map((item) => {
+                const Icon = item.icon
+                const active = isActive(item.href)
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setSheetOpen(false)}
+                    className={`flex flex-col items-center gap-2 border-[3px] border-ink p-3 text-center transition-transform active:translate-x-0.5 active:translate-y-0.5 ${
+                      active ? "bg-primary text-white" : "bg-card"
+                    }`}
+                  >
+                    <span
+                      className={`w-10 h-10 grid place-items-center border-[3px] border-ink -rotate-3 ${
+                        active ? "bg-card text-primary" : "bg-warn text-ink"
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" strokeWidth={2.75} />
+                    </span>
+                    <span className="text-[0.6rem] font-bold uppercase leading-tight">{item.label}</span>
+                    <span className={`text-[0.55rem] font-bold ${active ? "text-white/70" : "text-muted"}`}>{item.tag}</span>
+                  </Link>
+                )
+              })}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 border-t-[3px] border-ink px-6 py-5">
+              <button onClick={() => setDarkMode(!darkMode)} className="brut-btn brut-btn-warn w-full !py-3">
+                {darkMode ? <Sun className="w-4 h-4" strokeWidth={3} /> : <Moon className="w-4 h-4" strokeWidth={3} />}
+                Tema
+              </button>
+              <button
+                onClick={() => signOut({ callbackUrl: "/login" })}
+                className="brut-btn brut-btn-danger w-full !py-3"
+              >
+                <LogOut className="w-4 h-4" strokeWidth={3} />
+                Keluar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

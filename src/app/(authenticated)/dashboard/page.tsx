@@ -235,7 +235,7 @@ export default function DashboardPage() {
       />
 
       {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6">
         <StatCard
           icon={Package}
           title="Total Aset"
@@ -289,7 +289,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6 mb-3 sm:mb-6">
         <Card
           title="Aset per Komisi"
           sub="Distribusi aset berdasarkan komisi"
@@ -329,7 +329,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Bottom row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
         <Card title="Aset Terbaru" sub="5 aset yang baru ditambahkan" icon={Package}>
           {recentBarang.length > 0 ? (
             <div className="divide-y-[3px] divide-ink border-2 border-ink">

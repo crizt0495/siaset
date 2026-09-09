@@ -102,10 +102,19 @@ export function ButtonLink({
 
 export function AddButton({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <ButtonLink href={href} variant="primary">
-      <Plus className="w-4 h-4" strokeWidth={3} />
-      {children}
-    </ButtonLink>
+    <>
+      <Link
+        href={href}
+        aria-label={typeof children === "string" ? children : undefined}
+        className="brut-btn brut-btn-primary fixed bottom-[calc(env(safe-area-inset-bottom)+4.6rem)] right-4 z-40 lg:hidden !w-14 !h-14 !rounded-full !p-0 shadow-[4px_4px_0_0_var(--shadow)]"
+      >
+        <Plus className="w-6 h-6" strokeWidth={3} />
+      </Link>
+      <ButtonLink href={href} variant="primary" className="hidden lg:inline-flex">
+        <Plus className="w-4 h-4" strokeWidth={3} />
+        {children}
+      </ButtonLink>
+    </>
   )
 }
 
@@ -327,9 +336,10 @@ export function ConfirmModal({
 }) {
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center sm:items-center">
       <div className="absolute inset-0 bg-ink/80 brut-stripe" onClick={onCancel} />
-      <div className="brut-card relative w-full max-w-md p-6 brut-pop rotate-[-0.5deg]">
+      <div className="brut-card relative w-full sm:max-w-md p-6 sm:pt-8 rounded-t-2xl sm:rounded-none brut-sheet sm:brut-pop sm:rotate-[-0.5deg]">
+        <span className="mx-auto mb-4 block h-1.5 w-12 rounded-full bg-ink/25 sm:hidden" />
         <button
           onClick={onCancel}
           className="absolute top-3 right-3 p-1 text-muted hover:text-danger transition-colors"
@@ -340,9 +350,11 @@ export function ConfirmModal({
         <div className="brut-sticker w-12 h-12 text-lg -rotate-3 mb-4">!</div>
         <h3 className="brut-title brut-h2 mb-2">{title}</h3>
         <p className="text-sm text-muted mb-6 font-medium">{message}</p>
-        <div className="flex justify-end gap-3">
-          <Button onClick={onCancel}>Batal</Button>
-          <Button variant="danger" onClick={onConfirm}>
+        <div className="grid grid-cols-1 sm:flex sm:justify-end gap-3">
+          <Button onClick={onCancel} className="w-full sm:w-auto">
+            Batal
+          </Button>
+          <Button variant="danger" onClick={onConfirm} className="w-full sm:w-auto">
             {label}
           </Button>
         </div>

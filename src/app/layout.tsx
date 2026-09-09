@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Space_Grotesk, Archivo_Black } from "next/font/google"
 import "./globals.css"
 
@@ -16,6 +16,24 @@ const archivoBlack = Archivo_Black({
 export const metadata: Metadata = {
   title: "SiAset GKJW - Sistem Inventaris Aset",
   description: "Sistem Informasi Inventaris Aset GKJW Jemaat Probolinggo",
+  applicationName: "SiAset",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "SiAset",
+  },
+  formatDetection: { telephone: false },
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#14130f" },
+    { media: "(prefers-color-scheme: light)", color: "#16161a" },
+  ],
 }
 
 export default function RootLayout({
