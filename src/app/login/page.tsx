@@ -55,10 +55,6 @@ export default function LoginPage() {
               <svg className="w-2.5 h-2.5 fill-current" viewBox="0 0 12 12">
                 <path d="M6 0l6 6-6 6-6-6z" />
               </svg>
-              Neo Brutalism
-              <svg className="w-2.5 h-2.5 fill-current" viewBox="0 0 12 12">
-                <path d="M6 0l6 6-6 6-6-6z" />
-              </svg>
             </span>
           ))}
         </div>
