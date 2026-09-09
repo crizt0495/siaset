@@ -1,12 +1,25 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
-import Link from "next/link"
-import { ArrowLeft, Pencil, Trash2 } from "lucide-react"
+import { useParams, useRouter } from "next/navigation"
+import { Trash2 } from "lucide-react"
+import {
+  PageHeader, BackLink, LoadingState, EmptyState, Card, Label,
+  ButtonLink, Button, ConfirmModal,
+} from "@/components/ui"
+
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-4 py-2.5 border-b-2 border-ink/10 last:border-0">
+      <span className="text-xs font-bold text-muted uppercase tracking-wider shrink-0">{label}</span>
+      <span className="text-sm font-bold text-right break-words">{value}</span>
+    </div>
+  )
+}
 
 export default function PenghapusanDetail() {
   const params = useParams()
+  const router = useRouter()
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [showDelete, setShowDelete] = useState(false)
@@ -19,96 +32,61 @@ export default function PenghapusanDetail() {
   const handleDelete = async () => {
     setDeleting(true)
     await fetch(`/api/penghapusan/${params.id}`, { method: "DELETE" })
-    window.location.href = "/penghapusan"
+    router.push("/penghapusan")
   }
 
-  if (loading) return <div className="text-center py-8 text-gray-500">Memuat data...</div>
-  if (!data) return <div className="text-center py-8 text-gray-500">Data tidak ditemukan</div>
+  if (loading) return <LoadingState text="Memuat data penghapusan..." />
+  if (!data) return <EmptyState text="Data tidak ditemukan" />
 
   return (
     <div>
-      <Link href="/penghapusan" className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white mb-4">
-        <ArrowLeft className="w-4 h-4" /> Kembali
-      </Link>
-
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Detail Penghapusan</h1>
-        <div className="flex gap-2">
-          <Link href={`/penghapusan/${data.id}/edit`} className="flex items-center gap-2 bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600">
-            <Pencil className="w-4 h-4" /> Edit
-          </Link>
-          <button onClick={() => setShowDelete(true)} className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
-            <Trash2 className="w-4 h-4" /> Hapus
-          </button>
-        </div>
+      <div className="flex items-center gap-3 mb-6">
+        <BackLink href="/penghapusan" />
+        <span className="text-sm font-bold text-muted uppercase tracking-wider">Penghapusan</span>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Informasi Penghapusan</h2>
-          <div className="space-y-3">
-            {[
-              ["Tanggal Penghapusan", new Date(data.tanggalPenghapusan).toLocaleDateString("id-ID")],
-              ["Alasan", data.alasan],
-              ["Keterangan", data.keterangan || "-"],
-            ].map(([label, value]) => (
-              <div key={label} className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
-                <span className="text-sm font-medium text-gray-800 dark:text-gray-200 text-right max-w-[60%]">{value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+      <PageHeader
+        index="05"
+        title="Detail Penghapusan"
+        desc="Pengeluaran aset dari inventaris"
+        extra={<Label color="red">05 · Penghapusan</Label>}
+      >
+        <ButtonLink href={`/penghapusan/${data.id}/edit`} variant="warn">Edit</ButtonLink>
+        <Button variant="danger" onClick={() => setShowDelete(true)}>Hapus</Button>
+      </PageHeader>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Informasi Barang</h2>
-          <div className="space-y-3">
-            {[
-              ["Kode Barang", data.barang?.kodeBarang || "-"],
-              ["Nama Barang", data.barang?.namaBarang || "-"],
-              ["Komisi", data.barang?.komisi?.namaKomisi || "-"],
-              ["Kondisi", data.barang?.kondisi || "-"],
-              ["Lokasi", data.barang?.lokasi || "-"],
-              ["Jumlah", data.barang?.jumlah],
-              ["Status", data.barang?.status || "-"],
-            ].map(([label, value]) => (
-              <div key={label} className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
-                <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card title="Informasi Penghapusan" sub="Data penghapusan" icon={Trash2}>
+          <Row label="Tanggal Penghapusan" value={new Date(data.tanggalPenghapusan).toLocaleDateString("id-ID")} />
+          <Row label="Alasan" value={data.alasan} />
+          <Row label="Keterangan" value={data.keterangan || "-"} />
+        </Card>
+
+        <Card title="Informasi Barang" sub="Data aset terkait" icon={Trash2}>
+          <Row label="Kode Barang" value={<span className="font-mono">{data.barang?.kodeBarang || "-"}</span>} />
+          <Row label="Nama Barang" value={data.barang?.namaBarang || "-"} />
+          <Row label="Komisi" value={data.barang?.komisi?.namaKomisi || "-"} />
+          <Row label="Kondisi" value={data.barang?.kondisi || "-"} />
+          <Row label="Lokasi" value={data.barang?.lokasi || "-"} />
+          <Row label="Jumlah" value={data.barang?.jumlah ?? "-"} />
+          <Row label="Status" value={data.barang?.status || "-"} />
+        </Card>
 
         {data.user && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Dicatat oleh</h2>
-            <div className="space-y-3">
-              {[
-                ["Nama", data.user.namaLengkap || "-"],
-              ].map(([label, value]) => (
-                <div key={label} className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
-                  <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <Card title="Dicatat oleh" sub="Pencatat data" icon={Trash2} className="lg:col-span-2">
+            <Row label="Nama" value={data.user.namaLengkap || "-"} />
+          </Card>
         )}
       </div>
 
-      {showDelete && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">Hapus Penghapusan?</h3>
-            <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">Data yang dihapus tidak dapat dikembalikan.</p>
-            <div className="flex justify-end gap-3">
-              <button onClick={() => setShowDelete(false)} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Batal</button>
-              <button onClick={handleDelete} disabled={deleting} className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 disabled:opacity-50">{deleting ? "Menghapus..." : "Hapus"}</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        open={showDelete}
+        title="Hapus Penghapusan?"
+        message="Data yang dihapus tidak dapat dikembalikan."
+        onCancel={() => setShowDelete(false)}
+        onConfirm={handleDelete}
+        label={deleting ? "Menghapus..." : "Hapus"}
+      />
     </div>
   )
 }

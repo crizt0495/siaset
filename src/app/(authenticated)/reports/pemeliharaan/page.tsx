@@ -1,8 +1,11 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import Link from "next/link"
-import { ArrowLeft, ChevronLeft, ChevronRight, Wrench } from "lucide-react"
+import { Wrench } from "lucide-react"
+import {
+  PageHeader, BackLink, Card, StatCard, Table, TH, TD, Tr,
+  Pagination, EmptyState,
+} from "@/components/ui"
 
 interface Pemeliharaan {
   id: string; tanggal: string; biaya: number; keterangan: string
@@ -36,59 +39,49 @@ export default function LaporanPemeliharaan() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/reports" className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
-          <ArrowLeft className="w-4 h-4" />
-        </Link>
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Laporan Pemeliharaan</h1>
+        <BackLink href="/reports" />
+        <span className="text-sm font-bold text-muted uppercase tracking-wider">Laporan</span>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg"><Wrench className="w-5 h-5 text-orange-600 dark:text-orange-400" /></div>
-          <div><p className="text-xs text-gray-500 dark:text-gray-400">Total Biaya Pemeliharaan</p><p className="text-lg font-bold text-gray-800 dark:text-white">{formatRp(totalBiaya)}</p></div>
-        </div>
+      <PageHeader
+        index="07"
+        title="Laporan Pemeliharaan"
+        desc="Riwayat perawatan aset"
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+        <StatCard icon={Wrench} title="Total Biaya Pemeliharaan" value={formatRp(totalBiaya)} face="good" />
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-700/50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">No</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Barang</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Tanggal</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Biaya</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Keterangan</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {loading ? (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500">Memuat data...</td></tr>
-              ) : data.length === 0 ? (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500">Tidak ada data</td></tr>
-              ) : data.map((p, i) => (
-                <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{(page - 1) * 10 + i + 1}</td>
-                  <td className="px-4 py-3 text-gray-800 dark:text-gray-200 font-medium">{p.barang?.namaBarang || "-"}</td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{formatDate(p.tanggal)}</td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300 text-right">{formatRp(p.biaya)}</td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{p.keterangan || "-"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <Card noPad>
+        <Table
+          head={
+            <tr>
+              <TH className="!w-12">No</TH>
+              <TH>Barang</TH>
+              <TH>Tanggal</TH>
+              <TH className="!text-right">Biaya</TH>
+              <TH>Keterangan</TH>
+            </tr>
+          }
+        >
+          {loading ? (
+            <Tr><TD colSpan={5} className="!py-10 text-center text-muted font-bold">Memuat data...</TD></Tr>
+          ) : data.length === 0 ? (
+            <Tr><TD colSpan={5} className="!p-0"><EmptyState icon={Wrench} text="Tidak ada data" /></TD></Tr>
+          ) : data.map((p, i) => (
+            <Tr key={p.id}>
+              <TD className="font-bold text-muted">{(page - 1) * 10 + i + 1}</TD>
+              <TD className="font-bold">{p.barang?.namaBarang || "-"}</TD>
+              <TD className="text-muted font-semibold">{formatDate(p.tanggal)}</TD>
+              <TD className="!text-right brut-num">{formatRp(p.biaya)}</TD>
+              <TD className="text-muted font-semibold">{p.keterangan || "-"}</TD>
+            </Tr>
+          ))}
+        </Table>
 
-        <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Halaman {page} dari {totalPages}</p>
-          <div className="flex gap-2">
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}
-              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"><ChevronLeft className="w-4 h-4" /></button>
-            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}
-              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"><ChevronRight className="w-4 h-4" /></button>
-          </div>
-        </div>
-      </div>
+        <Pagination page={page} totalPages={totalPages} setPage={setPage} />
+      </Card>
     </div>
   )
 }

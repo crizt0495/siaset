@@ -2,8 +2,27 @@
 
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
-import Link from "next/link"
-import { ArrowLeft, Pencil, Package } from "lucide-react"
+import { Package, History } from "lucide-react"
+import {
+  PageHeader, BackLink, LoadingState, EmptyState, Card, Label,
+  Badge, ButtonLink,
+} from "@/components/ui"
+
+const kondisiColor: Record<string, "green" | "red" | "yellow" | "default"> = {
+  Baik: "green", Rusak: "red", Hilang: "yellow",
+}
+const statusColor: Record<string, "blue" | "yellow" | "default"> = {
+  Aktif: "blue", Nonaktif: "yellow",
+}
+
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-4 py-2.5 border-b-2 border-ink/10 last:border-0">
+      <span className="text-xs font-bold text-muted uppercase tracking-wider shrink-0">{label}</span>
+      <span className="text-sm font-bold text-right break-words">{value}</span>
+    </div>
+  )
+}
 
 export default function BarangDetail() {
   const params = useParams()
@@ -14,81 +33,93 @@ export default function BarangDetail() {
     fetch(`/api/barang/${params.id}`).then(r => r.json()).then(j => { setData(j); setLoading(false) })
   }, [params.id])
 
-  if (loading) return <div className="text-center py-8 text-gray-500">Memuat data...</div>
-  if (!data) return <div className="text-center py-8 text-gray-500">Data tidak ditemukan</div>
+  if (loading) return <LoadingState text="Memuat data barang..." />
+  if (!data) return <EmptyState text="Data tidak ditemukan" />
 
   const formatRupiah = (v: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(v)
 
   return (
     <div>
-      <Link href="/barang" className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white mb-4">
-        <ArrowLeft className="w-4 h-4" /> Kembali
-      </Link>
-
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Detail Barang</h1>
-        <Link href={`/barang/${data.id}/edit`} className="flex items-center gap-2 bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600">
-          <Pencil className="w-4 h-4" /> Edit
-        </Link>
+      <div className="flex items-center gap-3 mb-6">
+        <BackLink href="/barang" />
+        <span className="text-sm font-bold text-muted uppercase tracking-wider">Barang & Aset</span>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center gap-2"><Package className="w-5 h-5" /> Informasi Barang</h2>
-          <div className="space-y-3">
-            {[
-              ["Kode Barang", data.kodeBarang],
-              ["Nama Barang", data.namaBarang],
-              ["Komisi", data.komisi?.namaKomisi || "-"],
-              ["Kondisi", data.kondisi],
-              ["Status", data.status],
-              ["Lokasi", data.lokasi],
-              ["Jumlah", data.jumlah],
-              ["Tanggal Perolehan", new Date(data.tanggalPerolehan).toLocaleDateString("id-ID")],
-              ["Sumber Perolehan", data.sumberPerolehan],
-              ["Harga Perolehan", formatRupiah(Number(data.hargaPerolehan))],
-              ["Spesifikasi", data.spesifikasi || "-"],
-            ].map(([label, value]) => (
-              <div key={label} className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
-                <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{value}</span>
-              </div>
-            ))}
+      <PageHeader
+        index="02"
+        title={data.namaBarang || "Detail Barang"}
+        desc={`${data.kodeBarang || ""} · ${data.komisi?.namaKomisi || "-"}`}
+        extra={<Label color="blue">02 · Manajemen Aset</Label>}
+      >
+        <ButtonLink href={`/barang/${data.id}/edit`} variant="warn">Edit</ButtonLink>
+      </PageHeader>
+
+      <Card
+        title="Informasi Barang"
+        sub="Data pokok aset"
+        icon={Package}
+        className="mb-6"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+          <div>
+            <Row label="Kode Barang" value={<span className="font-mono">{data.kodeBarang}</span>} />
+            <Row label="Nama Barang" value={data.namaBarang} />
+            <Row label="Komisi" value={data.komisi?.namaKomisi || "-"} />
+            <Row label="Kondisi" value={<Badge color={kondisiColor[data.kondisi] || "default"}>{data.kondisi}</Badge>} />
+            <Row label="Status" value={<Badge color={statusColor[data.status] || "default"}>{data.status}</Badge>} />
+            <Row label="Jumlah" value={<span className="brut-num text-lg">{data.jumlah}</span>} />
+          </div>
+          <div>
+            <Row label="Lokasi" value={data.lokasi} />
+            <Row label="Tanggal Perolehan" value={new Date(data.tanggalPerolehan).toLocaleDateString("id-ID")} />
+            <Row label="Sumber Perolehan" value={data.sumberPerolehan || "-"} />
+            <Row label="Harga Perolehan" value={formatRupiah(Number(data.hargaPerolehan))} />
+            <Row label="Spesifikasi" value={data.spesifikasi || "-"} />
           </div>
         </div>
+      </Card>
 
-        <div className="space-y-6">
-          {data.peminjaman?.length > 0 && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Riwayat Peminjaman</h2>
-              <div className="space-y-2">
-                {data.peminjaman.map((p: any) => (
-                  <div key={p.id} className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-                    <div>
-                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{p.peminjam}</p>
-                      <p className="text-xs text-gray-500">{new Date(p.tanggalPinjam).toLocaleDateString("id-ID")} - {p.jumlahDipinjam} unit</p>
-                    </div>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${p.status === "Dipinjam" ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"}`}>{p.status}</span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card
+          title="Riwayat Peminjaman"
+          sub={data.peminjaman?.length > 0 ? `${data.peminjaman.length} catatan` : "Belum ada"}
+          icon={History}
+        >
+          {data.peminjaman?.length > 0 ? (
+            <div>
+              {data.peminjaman.map((p: any) => (
+                <div key={p.id} className="flex justify-between items-center gap-3 py-2.5 border-b-2 border-ink/10 last:border-0">
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold truncate">{p.peminjam}</p>
+                    <p className="text-xs text-muted font-semibold">{new Date(p.tanggalPinjam).toLocaleDateString("id-ID")} · {p.jumlahDipinjam} unit</p>
                   </div>
-                ))}
-              </div>
+                  <Badge color={p.status === "Dipinjam" ? "yellow" : "green"}>{p.status}</Badge>
+                </div>
+              ))}
             </div>
+          ) : (
+            <EmptyState icon={History} text="Belum ada peminjaman" />
           )}
+        </Card>
 
-          {data.mutasi?.length > 0 && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Riwayat Mutasi</h2>
-              <div className="space-y-2">
-                {data.mutasi.map((m: any) => (
-                  <div key={m.id} className="py-2 border-b border-gray-100 dark:border-gray-700">
-                    <p className="text-sm text-gray-800 dark:text-gray-200">{m.lokasiAsal} → {m.lokasiTujuan}</p>
-                    <p className="text-xs text-gray-500">{new Date(m.tanggalMutasi).toLocaleDateString("id-ID")}</p>
-                  </div>
-                ))}
-              </div>
+        <Card
+          title="Riwayat Mutasi"
+          sub={data.mutasi?.length > 0 ? `${data.mutasi.length} catatan` : "Belum ada"}
+          icon={Package}
+        >
+          {data.mutasi?.length > 0 ? (
+            <div>
+              {data.mutasi.map((m: any) => (
+                <div key={m.id} className="py-2.5 border-b-2 border-ink/10 last:border-0">
+                  <p className="text-sm font-bold">{m.lokasiAsal} <span className="text-primary">→</span> {m.lokasiTujuan}</p>
+                  <p className="text-xs text-muted font-semibold">{new Date(m.tanggalMutasi).toLocaleDateString("id-ID")}</p>
+                </div>
+              ))}
             </div>
+          ) : (
+            <EmptyState icon={Package} text="Belum ada mutasi" />
           )}
-        </div>
+        </Card>
       </div>
     </div>
   )

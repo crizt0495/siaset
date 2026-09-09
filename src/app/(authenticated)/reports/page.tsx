@@ -2,19 +2,9 @@
 
 import { useEffect, useState, useCallback } from "react"
 import {
-  Package,
-  ArrowRightLeft,
-  TrendingUp,
-  XCircle,
-  Activity,
-  Filter,
-  BarChart3,
-  Calendar,
-  FileText,
-  ClipboardList,
-  Repeat,
-  Trash2,
-  Wrench,
+  Package, ArrowRightLeft, TrendingUp, XCircle, Activity,
+  Filter, BarChart3, Calendar, FileText, ClipboardList,
+  Repeat, Trash2, Wrench,
 } from "lucide-react"
 import {
   Chart as ChartJS,
@@ -27,6 +17,10 @@ import {
   ArcElement,
 } from "chart.js"
 import { Bar, Doughnut } from "react-chartjs-2"
+import {
+  PageHeader, Label, StatCard, Card, Select, Input,
+  Button, LoadingState, ErrorState, EmptyState,
+} from "@/components/ui"
 
 ChartJS.register(
   CategoryScale,
@@ -128,96 +122,15 @@ export default function ReportsPage() {
     setDateTo("")
   }
 
-  if (loading && !data) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Memuat data laporan...</p>
-        </div>
-      </div>
-    )
-  }
+  if (loading && !data) return <LoadingState text="Memuat data laporan..." />
 
-  if (error && !data) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <XCircle className="w-12 h-12 text-red-500" />
-          <p className="text-gray-700 dark:text-gray-300 font-medium">Gagal memuat laporan</p>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">{error}</p>
-          <button
-            onClick={() => fetchData()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm transition-colors"
-          >
-            Coba Lagi
-          </button>
-        </div>
-      </div>
-    )
-  }
+  if (error && !data) return (
+    <ErrorState message={error} onRetry={() => fetchData()} />
+  )
 
   if (!data) return null
 
   const { summary, distribution, monthlyPeminjaman } = data
-
-  const statCards = [
-    {
-      title: "Total Aset",
-      value: summary.totalBarang,
-      icon: Package,
-      gradient: "from-blue-500 to-blue-600",
-      lightBg: "bg-blue-50 dark:bg-blue-950/50",
-      iconBg: "bg-blue-100 dark:bg-blue-900/50",
-      iconColor: "text-blue-600 dark:text-blue-400",
-      textColor: "text-blue-600 dark:text-blue-400",
-      subtext: `${summary.barangAktif} aktif`,
-    },
-    {
-      title: "Peminjaman",
-      value: summary.totalPeminjaman,
-      icon: ArrowRightLeft,
-      gradient: "from-amber-500 to-orange-500",
-      lightBg: "bg-amber-50 dark:bg-amber-950/50",
-      iconBg: "bg-amber-100 dark:bg-amber-900/50",
-      iconColor: "text-amber-600 dark:text-amber-400",
-      textColor: "text-amber-600 dark:text-amber-400",
-      subtext: `${summary.peminjamanAktif} aktif`,
-    },
-    {
-      title: "Mutasi",
-      value: summary.totalMutasi,
-      icon: TrendingUp,
-      gradient: "from-indigo-500 to-violet-500",
-      lightBg: "bg-indigo-50 dark:bg-indigo-950/50",
-      iconBg: "bg-indigo-100 dark:bg-indigo-900/50",
-      iconColor: "text-indigo-600 dark:text-indigo-400",
-      textColor: "text-indigo-600 dark:text-indigo-400",
-      subtext: "total riwayat",
-    },
-    {
-      title: "Penghapusan",
-      value: summary.totalPenghapusan,
-      icon: XCircle,
-      gradient: "from-rose-500 to-red-500",
-      lightBg: "bg-rose-50 dark:bg-rose-950/50",
-      iconBg: "bg-rose-100 dark:bg-rose-900/50",
-      iconColor: "text-rose-600 dark:text-rose-400",
-      textColor: "text-rose-600 dark:text-rose-400",
-      subtext: "total dihapus",
-    },
-    {
-      title: "Pemeliharaan",
-      value: summary.totalPemeliharaan,
-      icon: Activity,
-      gradient: "from-teal-500 to-emerald-500",
-      lightBg: "bg-teal-50 dark:bg-teal-950/50",
-      iconBg: "bg-teal-100 dark:bg-teal-900/50",
-      iconColor: "text-teal-600 dark:text-teal-400",
-      textColor: "text-teal-600 dark:text-teal-400",
-      subtext: formatRupiah(summary.biayaPemeliharaan),
-    },
-  ]
 
   const barChartData = {
     labels: distribution.byKomisi.map((k) => k.namaKomisi),
@@ -226,27 +139,18 @@ export default function ReportsPage() {
         label: "Jumlah Aset",
         data: distribution.byKomisi.map((k) => k.count),
         backgroundColor: [
-          "rgba(59, 130, 246, 0.7)",
-          "rgba(16, 185, 129, 0.7)",
-          "rgba(245, 158, 11, 0.7)",
-          "rgba(139, 92, 246, 0.7)",
-          "rgba(236, 72, 153, 0.7)",
-          "rgba(20, 184, 166, 0.7)",
-          "rgba(249, 115, 22, 0.7)",
-          "rgba(99, 102, 241, 0.7)",
+          "#2b59ff",
+          "#23c677",
+          "#ffc829",
+          "#8b5cf6",
+          "#ff4d3d",
+          "#14b8a6",
+          "#f97316",
+          "#6366f1",
         ],
-        borderColor: [
-          "rgb(59, 130, 246)",
-          "rgb(16, 185, 129)",
-          "rgb(245, 158, 11)",
-          "rgb(139, 92, 246)",
-          "rgb(236, 72, 153)",
-          "rgb(20, 184, 166)",
-          "rgb(249, 115, 22)",
-          "rgb(99, 102, 241)",
-        ],
-        borderWidth: 1,
-        borderRadius: 6,
+        borderColor: "#16161a",
+        borderWidth: 3,
+        borderRadius: 0,
       },
     ],
   }
@@ -258,30 +162,31 @@ export default function ReportsPage() {
       legend: { display: false },
       title: { display: false },
       tooltip: {
-        backgroundColor: "rgba(0,0,0,0.8)",
-        titleFont: { size: 13 },
-        bodyFont: { size: 12 },
+        backgroundColor: "#16161a",
+        titleFont: { size: 13, family: "Space Grotesk", weight: "bold" as const },
+        bodyFont: { size: 12, family: "Space Grotesk" },
         padding: 10,
-        cornerRadius: 8,
       },
     },
     scales: {
       y: {
         beginAtZero: true,
-        ticks: { stepSize: 1, font: { size: 12 }, color: "#9ca3af" },
-        grid: { color: "rgba(156,163,175,0.15)" },
+        ticks: { stepSize: 1, font: { size: 12, family: "Space Grotesk" }, color: "#6b6b6b" },
+        grid: { color: "rgba(22,22,26,0.12)" },
+        border: { color: "#16161a" },
       },
       x: {
-        ticks: { font: { size: 11 }, color: "#9ca3af", maxRotation: 45 },
+        ticks: { font: { size: 11, family: "Space Grotesk" }, color: "#6b6b6b", maxRotation: 45 },
         grid: { display: false },
+        border: { color: "#16161a" },
       },
     },
   }
 
   const kondisiColorMap: Record<string, string> = {
-    Baik: "rgba(34, 197, 94, 0.75)",
-    Rusak: "rgba(239, 68, 68, 0.75)",
-    Hilang: "rgba(234, 179, 8, 0.75)",
+    Baik: "#23c677",
+    Rusak: "#ff4d3d",
+    Hilang: "#ffc829",
   }
 
   const doughnutChartData = {
@@ -290,16 +195,10 @@ export default function ReportsPage() {
       {
         data: distribution.byKondisi.map((k) => k.count),
         backgroundColor: distribution.byKondisi.map(
-          (k) => kondisiColorMap[k.kondisi] || "rgba(156,163,175,0.75)"
+          (k) => kondisiColorMap[k.kondisi] || "#9ca3af"
         ),
-        borderColor: distribution.byKondisi.map((k) =>
-          k.kondisi === "Baik"
-            ? "rgb(34, 197, 94)"
-            : k.kondisi === "Rusak"
-              ? "rgb(239, 68, 68)"
-              : "rgb(234, 179, 8)"
-        ),
-        borderWidth: 2,
+        borderColor: "#16161a",
+        borderWidth: 4,
         hoverOffset: 8,
       },
     ],
@@ -308,24 +207,23 @@ export default function ReportsPage() {
   const doughnutOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    cutout: "60%",
+    cutout: "58%",
     plugins: {
       legend: {
         position: "bottom" as const,
         labels: {
           padding: 16,
           usePointStyle: true,
-          pointStyle: "circle",
-          font: { size: 13 },
-          color: "#9ca3af",
+          pointStyle: "rectRounded" as const,
+          font: { size: 13, family: "Space Grotesk", weight: "bold" as const },
+          color: "#6b6b6b",
         },
       },
       tooltip: {
-        backgroundColor: "rgba(0,0,0,0.8)",
-        titleFont: { size: 13 },
-        bodyFont: { size: 12 },
+        backgroundColor: "#16161a",
+        titleFont: { size: 13, family: "Space Grotesk", weight: "bold" as const },
+        bodyFont: { size: 12, family: "Space Grotesk" },
         padding: 10,
-        cornerRadius: 8,
         callbacks: {
           label: function (context: any) {
             const total = context.dataset.data.reduce(
@@ -352,10 +250,10 @@ export default function ReportsPage() {
       {
         label: "Peminjaman",
         data: monthlyPeminjaman.map((m) => m.count),
-        backgroundColor: "rgba(245, 158, 11, 0.7)",
-        borderColor: "rgb(245, 158, 11)",
-        borderWidth: 1,
-        borderRadius: 6,
+        backgroundColor: "#ffc829",
+        borderColor: "#16161a",
+        borderWidth: 3,
+        borderRadius: 0,
       },
     ],
   }
@@ -366,321 +264,193 @@ export default function ReportsPage() {
       desc: "Data seluruh aset dan inventaris",
       icon: ClipboardList,
       href: "/reports/aset",
-      gradient: "from-blue-500 to-blue-600",
+      face: "primary" as const,
     },
     {
       title: "Laporan Peminjaman",
       desc: "Riwayat peminjaman aset",
       icon: FileText,
       href: "/reports/peminjaman",
-      gradient: "from-amber-500 to-orange-500",
+      face: "warn" as const,
     },
     {
       title: "Laporan Mutasi",
       desc: "Perpindahan lokasi aset",
       icon: Repeat,
       href: "/reports/mutasi",
-      gradient: "from-indigo-500 to-violet-500",
+      face: "vibe" as const,
     },
     {
       title: "Laporan Penghapusan",
       desc: "Aset yang telah dihapus",
       icon: Trash2,
       href: "/reports/penghapusan",
-      gradient: "from-rose-500 to-red-500",
+      face: "danger" as const,
     },
     {
       title: "Laporan Pemeliharaan",
       desc: "Riwayat perawatan aset",
       icon: Wrench,
       href: "/reports/pemeliharaan",
-      gradient: "from-teal-500 to-emerald-500",
+      face: "good" as const,
     },
   ]
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Laporan</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Ringkasan dan analisis data aset GKJW Probolinggo
-          </p>
-        </div>
-        <div className="hidden sm:flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-          <Calendar className="w-4 h-4" />
-          {new Date().toLocaleDateString("id-ID", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          })}
-        </div>
+    <div className="space-y-8">
+      <PageHeader
+        index="07"
+        title="Laporan"
+        desc="Ringkasan dan analisis data aset GKJW Probolinggo"
+        extra={
+          <Label icon={Calendar}>
+            {new Date().toLocaleDateString("id-ID", {
+              weekday: "short",
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
+          </Label>
+        }
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+        <StatCard icon={Package} title="Total Aset" value={summary.totalBarang} sub={`${summary.barangAktif} aktif`} face="primary" />
+        <StatCard icon={ArrowRightLeft} title="Peminjaman" value={summary.totalPeminjaman} sub={`${summary.peminjamanAktif} aktif`} face="warn" />
+        <StatCard icon={TrendingUp} title="Mutasi" value={summary.totalMutasi} sub="total riwayat" face="vibe" />
+        <StatCard icon={XCircle} title="Penghapusan" value={summary.totalPenghapusan} sub="total dihapus" face="danger" />
+        <StatCard icon={Activity} title="Pemeliharaan" value={summary.totalPemeliharaan} sub={formatRupiah(summary.biayaPemeliharaan)} face="good" />
       </div>
 
-      {/* Summary Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {statCards.map((card) => {
-          const Icon = card.icon
-          return (
-            <div
-              key={card.title}
-              className={`${card.lightBg} rounded-2xl p-5 border border-gray-100 dark:border-gray-800 hover:shadow-lg transition-shadow duration-200`}
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                    {card.title}
-                  </p>
-                  <p className={`text-3xl font-bold mt-1 ${card.textColor}`}>
-                    {card.value}
-                  </p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                    {card.subtext}
-                  </p>
-                </div>
-                <div className={`${card.iconBg} p-3 rounded-xl`}>
-                  <Icon className={`w-6 h-6 ${card.iconColor}`} />
-                </div>
-              </div>
-              <div
-                className={`mt-3 h-1.5 rounded-full bg-gradient-to-r ${card.gradient} opacity-30`}
-              />
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Filter Section */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800">
-        <div className="flex items-center gap-2 mb-4">
-          <Filter className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-          <h2 className="text-base font-semibold text-gray-800 dark:text-white">
-            Filter Laporan
-          </h2>
-        </div>
+      <Card
+        title="Filter Laporan"
+        sub="Persempit rentang data laporan"
+        icon={Filter}
+      >
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-              Komisi
-            </label>
-            <select
-              value={filterKomisi}
-              onChange={(e) => setFilterKomisi(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-            >
+            <Label>Komisi</Label>
+            <Select value={filterKomisi} onChange={(e) => setFilterKomisi(e.target.value)} className="mt-2">
               <option value="">Semua Komisi</option>
               {komisiList.map((k) => (
-                <option key={k.id} value={k.id}>
-                  {k.namaKomisi}
-                </option>
+                <option key={k.id} value={k.id}>{k.namaKomisi}</option>
               ))}
-            </select>
+            </Select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-              Kondisi
-            </label>
-            <select
-              value={filterKondisi}
-              onChange={(e) => setFilterKondisi(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-            >
+            <Label>Kondisi</Label>
+            <Select value={filterKondisi} onChange={(e) => setFilterKondisi(e.target.value)} className="mt-2">
               <option value="">Semua Kondisi</option>
               <option value="Baik">Baik</option>
               <option value="Rusak">Rusak</option>
               <option value="Hilang">Hilang</option>
-            </select>
+            </Select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-              Status
-            </label>
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-            >
+            <Label>Status</Label>
+            <Select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="mt-2">
               <option value="">Semua Status</option>
               <option value="Aktif">Aktif</option>
               <option value="Nonaktif">Nonaktif</option>
-            </select>
+            </Select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-              Dari Tanggal
-            </label>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-            />
+            <Label>Dari Tanggal</Label>
+            <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="mt-2" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-              Sampai Tanggal
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              />
-              <button
-                onClick={resetFilters}
-                className="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors shrink-0"
-              >
-                Reset
-              </button>
+            <Label>Sampai Tanggal</Label>
+            <div className="flex gap-2 mt-2">
+              <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+              <Button onClick={resetFilters} variant="dark" className="shrink-0">Reset</Button>
             </div>
           </div>
         </div>
-      </div>
+      </Card>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Bar Chart - Assets by Komisi */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-base font-semibold text-gray-800 dark:text-white">
-                Aset per Komisi
-              </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                Distribusi aset berdasarkan komisi
-              </p>
-            </div>
-            <div className="bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-full">
-              <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                {distribution.byKomisi.length} Komisi
-              </span>
-            </div>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card
+          title="Aset per Komisi"
+          sub="Distribusi aset berdasarkan komisi"
+          icon={BarChart3}
+          className="lg:col-span-2"
+          actions={<Label color="blue">{distribution.byKomisi.length} Komisi</Label>}
+        >
           <div className="h-64 sm:h-72">
             {distribution.byKomisi.length > 0 ? (
               <Bar data={barChartData} options={barChartOptions} />
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500 text-sm">
-                Belum ada data komisi
-              </div>
+              <EmptyState text="Belum ada data komisi" />
             )}
           </div>
-        </div>
+        </Card>
 
-        {/* Doughnut Chart - Assets by Kondisi */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800">
-          <div className="mb-4">
-            <h2 className="text-base font-semibold text-gray-800 dark:text-white">
-              Aset per Kondisi
-            </h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              Status kondisi seluruh aset
-            </p>
-          </div>
+        <Card
+          title="Aset per Kondisi"
+          sub="Status kondisi seluruh aset"
+          icon={BarChart3}
+          actions={<Label color="yellow">{totalKondisi} Total</Label>}
+        >
           <div className="h-64 sm:h-72">
             {distribution.byKondisi.length > 0 ? (
               <Doughnut data={doughnutChartData} options={doughnutOptions} />
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500 text-sm">
-                Belum ada data kondisi
-              </div>
+              <EmptyState text="Belum ada data kondisi" />
             )}
           </div>
-          <div className="mt-3 flex justify-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+          <div className="mt-3 flex justify-center gap-4 text-xs font-bold text-muted">
             {distribution.byKondisi.map((k) => (
               <span key={k.kondisi} className="flex items-center gap-1.5">
                 <span
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{
-                    backgroundColor:
-                      k.kondisi === "Baik"
-                        ? "rgb(34, 197, 94)"
-                        : k.kondisi === "Rusak"
-                          ? "rgb(239, 68, 68)"
-                          : "rgb(234, 179, 8)",
-                  }}
+                  className="w-3 h-3 border-2 border-ink"
+                  style={{ backgroundColor: kondisiColorMap[k.kondisi] || "#9ca3af" }}
                 />
                 {k.kondisi} ({totalKondisi > 0 ? ((k.count / totalKondisi) * 100).toFixed(0) : 0}%)
               </span>
             ))}
           </div>
-        </div>
+        </Card>
       </div>
 
-      {/* Monthly Activity Chart */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-base font-semibold text-gray-800 dark:text-white">
-              Aktivitas Peminjaman Bulanan
-            </h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              Jumlah peminjaman per bulan (12 bulan terakhir)
-            </p>
-          </div>
-          <div className="bg-amber-50 dark:bg-amber-900/30 px-3 py-1 rounded-full">
-            <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
-              {summary.totalPeminjaman} Total
-            </span>
-          </div>
-        </div>
+      <Card
+        title="Aktivitas Peminjaman Bulanan"
+        sub="Jumlah peminjaman per bulan (12 bulan terakhir)"
+        icon={BarChart3}
+        actions={<Label color="yellow">{summary.totalPeminjaman} Total</Label>}
+      >
         <div className="h-64 sm:h-72">
           {monthlyPeminjaman.length > 0 ? (
             <Bar data={monthlyChartData} options={barChartOptions} />
           ) : (
-            <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500 text-sm">
-              Belum ada data peminjaman
-            </div>
+            <EmptyState text="Belum ada data peminjaman" />
           )}
         </div>
-      </div>
+      </Card>
 
-      {/* Sub-report Links */}
-      <div>
-        <div className="flex items-center gap-2 mb-4">
-          <BarChart3 className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-          <h2 className="text-base font-semibold text-gray-800 dark:text-white">
-            Laporan Detail
-          </h2>
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <span className="brut-sticker w-10 h-10 text-base">
+            <FileText className="w-5 h-5" strokeWidth={3} />
+          </span>
+          <h2 className="brut-title brut-h2">Laporan Detail</h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
           {subReports.map((report) => {
             const Icon = report.icon
             return (
               <a
                 key={report.title}
                 href={report.href}
-                className="group bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 hover:shadow-lg transition-all duration-200"
+                className="brut-card p-5 bg-card hover:bg-paper2 transition-colors group"
               >
-                <div
-                  className={`w-10 h-10 rounded-xl bg-gradient-to-br ${report.gradient} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}
-                >
-                  <Icon className="w-5 h-5 text-white" />
-                </div>
-                <h3 className="text-sm font-semibold text-gray-800 dark:text-white">
-                  {report.title}
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {report.desc}
+                <span className="brut-sticker w-11 h-11 text-lg mb-4 rotate-3 group-hover:-rotate-3 transition-transform">
+                  <Icon className="w-5 h-5" strokeWidth={3} />
+                </span>
+                <h3 className="brut-title brut-h3">{report.title}</h3>
+                <p className="text-xs text-muted font-semibold mt-1">{report.desc}</p>
+                <p className="mt-3 text-xs font-bold uppercase tracking-wider text-primary">
+                  Lihat detail →
                 </p>
-                <div className="mt-3 flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                  Lihat detail
-                  <svg
-                    className="w-3 h-3"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </div>
               </a>
             )
           })}

@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft } from "lucide-react"
-import Link from "next/link"
+import { Package } from "lucide-react"
+import {
+  PageHeader, BackLink, ErrorBanner, FormCard, Field,
+  Input, Select, Textarea, Button, ButtonLink,
+} from "@/components/ui"
 
 interface Komisi { id: string; namaKomisi: string }
 
@@ -47,82 +50,76 @@ export default function BarangCreate() {
 
   return (
     <div>
-      <Link href="/barang" className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white mb-4">
-        <ArrowLeft className="w-4 h-4" /> Kembali
-      </Link>
-      <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Tambah Barang</h1>
+      <div className="flex items-center gap-3 mb-6">
+        <BackLink href="/barang" />
+        <span className="text-sm font-bold text-muted uppercase tracking-wider">Barang & Aset</span>
+      </div>
 
-      {error && <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>}
+      <PageHeader
+        index="02"
+        title="Tambah Barang"
+        desc="Catat aset baru ke inventaris GKJW"
+      />
 
-      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nama Barang *</label>
-              <input type="text" required value={form.namaBarang} onChange={set("namaBarang")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
+      {error && <ErrorBanner message={error} />}
+
+      <form onSubmit={handleSubmit}>
+        <FormCard
+          title="Form Barang"
+          icon={Package}
+          footer={
+            <>
+              <ButtonLink href="/barang" variant="dark">Batal</ButtonLink>
+              <Button type="submit" variant="primary" disabled={loading}>
+                {loading ? "Menyimpan..." : "Simpan"}
+              </Button>
+            </>
+          }
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-5">
+              <Field label="Nama Barang" required>
+                <Input type="text" required value={form.namaBarang} onChange={set("namaBarang")} placeholder="Nama barang / aset" />
+              </Field>
+              <Field label="Komisi" hint="Komisi pemilik / pengelola aset">
+                <Select value={form.komisiId} onChange={set("komisiId")}>
+                  <option value="">Pilih Komisi</option>
+                  {komisiList.map(k => <option key={k.id} value={k.id}>{k.namaKomisi}</option>)}
+                </Select>
+              </Field>
+              <Field label="Jumlah">
+                <Input type="number" min="0" value={form.jumlah} onChange={set("jumlah")} />
+              </Field>
+              <Field label="Tanggal Perolehan">
+                <Input type="date" value={form.tanggalPerolehan} onChange={set("tanggalPerolehan")} />
+              </Field>
+              <Field label="Sumber Perolehan">
+                <Input type="text" value={form.sumberPerolehan} onChange={set("sumberPerolehan")} placeholder="Misal: sumbangan, pembelian" />
+              </Field>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Komisi</label>
-              <select value={form.komisiId} onChange={set("komisiId")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
-                <option value="">Pilih Komisi</option>
-                {komisiList.map(k => <option key={k.id} value={k.id}>{k.namaKomisi}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jumlah</label>
-              <input type="number" min="0" value={form.jumlah} onChange={set("jumlah")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Perolehan</label>
-              <input type="date" value={form.tanggalPerolehan} onChange={set("tanggalPerolehan")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sumber Perolehan</label>
-              <input type="text" value={form.sumberPerolehan} onChange={set("sumberPerolehan")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
+            <div className="space-y-5">
+              <Field label="Spesifikasi">
+                <Textarea rows={3} value={form.spesifikasi} onChange={set("spesifikasi")} placeholder="Merk, model, ukuran, dll." />
+              </Field>
+              <Field label="Kondisi">
+                <Select value={form.kondisi} onChange={set("kondisi")}>
+                  <option value="Baik">Baik</option><option value="Rusak">Rusak</option><option value="Hilang">Hilang</option>
+                </Select>
+              </Field>
+              <Field label="Lokasi" required>
+                <Input type="text" required value={form.lokasi} onChange={set("lokasi")} placeholder="Lokasi penyimpanan saat ini" />
+              </Field>
+              <Field label="Harga Perolehan (Rp)">
+                <Input type="number" min="0" step="1000" value={form.hargaPerolehan} onChange={set("hargaPerolehan")} />
+              </Field>
+              <Field label="Status">
+                <Select value={form.status} onChange={set("status")}>
+                  <option value="Aktif">Aktif</option><option value="Nonaktif">Nonaktif</option>
+                </Select>
+              </Field>
             </div>
           </div>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Spesifikasi</label>
-              <textarea rows={3} value={form.spesifikasi} onChange={set("spesifikasi")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kondisi</label>
-              <select value={form.kondisi} onChange={set("kondisi")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
-                <option value="Baik">Baik</option><option value="Rusak">Rusak</option><option value="Hilang">Hilang</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lokasi *</label>
-              <input type="text" required value={form.lokasi} onChange={set("lokasi")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Harga Perolehan (Rp)</label>
-              <input type="number" min="0" step="1000" value={form.hargaPerolehan} onChange={set("hargaPerolehan")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-              <select value={form.status} onChange={set("status")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
-                <option value="Aktif">Aktif</option><option value="Nonaktif">Nonaktif</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        <div className="mt-6 flex justify-end gap-3">
-          <Link href="/barang" className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Batal</Link>
-          <button type="submit" disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50">{loading ? "Menyimpan..." : "Simpan"}</button>
-        </div>
+        </FormCard>
       </form>
     </div>
   )

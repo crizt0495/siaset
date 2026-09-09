@@ -2,7 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { Plus, Search, Eye, Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
+import { Search, Eye, Pencil, Trash2, Users } from "lucide-react"
+import {
+  PageHeader, AddButton, Card, Table, TH, TD, Tr, Pagination,
+  ConfirmModal, Input, EmptyState, Label,
+} from "@/components/ui"
 
 interface Komisi {
   id: string; namaKomisi: string; keterangan: string; _count?: { users: number; barang: number }
@@ -38,82 +42,67 @@ export default function KomisiList() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Komisi</h1>
-        <Link href="/komisi/create" className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-          <Plus className="w-4 h-4" /> Tambah Komisi
-        </Link>
-      </div>
+      <PageHeader
+        index="08"
+        title="Komisi"
+        desc="Kelola komisi & departemen jemaat"
+        extra={<Label color="purple">08 · Administrasi</Label>}
+      >
+        <AddButton href="/komisi/create">Tambah Komisi</AddButton>
+      </PageHeader>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+      <Card noPad>
+        <div className="p-4 border-b-[3px] border-ink bg-paper2">
           <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input type="text" placeholder="Cari komisi..." value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
-              className="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" strokeWidth={3} />
+            <Input type="text" placeholder="Cari komisi..." value={search} className="!pl-10" onChange={e => { setSearch(e.target.value); setPage(1) }} />
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-700/50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">No</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Nama Komisi</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Keterangan</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Jumlah Anggota</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Jumlah Barang</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {loading ? (
-                <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-500">Memuat data...</td></tr>
-              ) : data.length === 0 ? (
-                <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-500">Tidak ada data</td></tr>
-              ) : data.map((k, i) => (
-                <tr key={k.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{(page - 1) * 10 + i + 1}</td>
-                  <td className="px-4 py-3 text-gray-800 dark:text-gray-200 font-medium">{k.namaKomisi}</td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300 max-w-xs truncate">{k.keterangan || "-"}</td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300 text-center">{k._count?.users ?? 0}</td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300 text-center">{k._count?.barang ?? 0}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      <Link href={`/komisi/${k.id}`} className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"><Eye className="w-4 h-4" /></Link>
-                      <Link href={`/komisi/${k.id}/edit`} className="p-1.5 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded"><Pencil className="w-4 h-4" /></Link>
-                      <button onClick={() => setDeleteId(k.id)} className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"><Trash2 className="w-4 h-4" /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table
+          head={
+            <tr>
+              <TH className="!w-12">No</TH>
+              <TH>Nama Komisi</TH>
+              <TH>Keterangan</TH>
+              <TH>Anggota</TH>
+              <TH>Barang</TH>
+              <TH className="!text-right">Aksi</TH>
+            </tr>
+          }
+        >
+          {loading ? (
+            <Tr><TD colSpan={6} className="!py-10 text-center text-muted font-bold">Memuat data...</TD></Tr>
+          ) : data.length === 0 ? (
+            <Tr><TD colSpan={6} className="!p-0"><EmptyState icon={Users} text="Tidak ada data komisi" /></TD></Tr>
+          ) : data.map((k, i) => (
+            <Tr key={k.id}>
+              <TD className="font-bold text-muted">{(page - 1) * 10 + i + 1}</TD>
+              <TD className="font-bold">{k.namaKomisi}</TD>
+              <TD className="text-muted font-semibold max-w-xs truncate">{k.keterangan || "-"}</TD>
+              <TD className="brut-num">{k._count?.users ?? 0}</TD>
+              <TD className="brut-num">{k._count?.barang ?? 0}</TD>
+              <TD>
+                <div className="flex items-center justify-end gap-1.5">
+                  <Link href={`/komisi/${k.id}`} className="brut-iconbtn brut-iconbtn-primary" title="Detail"><Eye className="w-4 h-4" strokeWidth={2.75} /></Link>
+                  <Link href={`/komisi/${k.id}/edit`} className="brut-iconbtn brut-iconbtn-warn" title="Edit"><Pencil className="w-4 h-4" strokeWidth={2.75} /></Link>
+                  <button onClick={() => setDeleteId(k.id)} className="brut-iconbtn brut-iconbtn-danger" title="Hapus"><Trash2 className="w-4 h-4" strokeWidth={2.75} /></button>
+                </div>
+              </TD>
+            </Tr>
+          ))}
+        </Table>
 
-        <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Halaman {page} dari {totalPages}</p>
-          <div className="flex gap-2">
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}
-              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"><ChevronLeft className="w-4 h-4" /></button>
-            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}
-              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"><ChevronRight className="w-4 h-4" /></button>
-          </div>
-        </div>
-      </div>
+        <Pagination page={page} totalPages={totalPages} setPage={setPage} />
+      </Card>
 
-      {deleteId && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">Hapus Komisi?</h3>
-            <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">Data yang dihapus tidak dapat dikembalikan.</p>
-            <div className="flex justify-end gap-3">
-              <button onClick={() => setDeleteId(null)} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Batal</button>
-              <button onClick={handleDelete} className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700">Hapus</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        open={!!deleteId}
+        title="Hapus Komisi?"
+        message="Data yang dihapus tidak dapat dikembalikan."
+        onCancel={() => setDeleteId(null)}
+        onConfirm={handleDelete}
+      />
     </div>
   )
 }

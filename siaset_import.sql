@@ -1,7 +1,7 @@
 -- Converted from MySQL to PostgreSQL
 -- Database: neondb
 
-TRUNCATE TABLE "aktivitas", "pemeliharaan", "penghapusan", "mutasi", "peminjaman", "barang", "model_has_permissions", "model_has_roles", "role_has_permissions", "permissions", "roles", "users", "komisi", "qr_scan_logs" CASCADE;
+TRUNCATE TABLE "aktivitas", "pemeliharaan", "penghapusan", "mutasi", "peminjaman", "barang", "model_has_permissions", "model_has_roles", "role_has_permissions", "permissions", "roles", "users", "komisi" CASCADE;
 
 -- komisi (23 rows)
 INSERT INTO "komisi" (id, "nama_komisi", keterangan, "created_at", "updated_at") VALUES

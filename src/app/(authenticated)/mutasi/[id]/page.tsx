@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import Link from "next/link"
-import { ArrowLeft, Pencil, Trash2, Package, MapPin, Calendar, User, Clock, ArrowRight } from "lucide-react"
+import { MapPin, ArrowDown, Package, Calendar } from "lucide-react"
+import {
+  PageHeader, BackLink, LoadingState, EmptyState, Card, Label,
+  ButtonLink, Button, ConfirmModal,
+} from "@/components/ui"
 
 interface MutasiDetail {
   id: string
@@ -26,12 +29,22 @@ interface MutasiDetail {
   } | null
 }
 
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-4 py-2.5 border-b-2 border-ink/10 last:border-0">
+      <span className="text-xs font-bold text-muted uppercase tracking-wider shrink-0">{label}</span>
+      <span className="text-sm font-bold text-right break-words">{value}</span>
+    </div>
+  )
+}
+
 export default function MutasiDetailPage() {
   const params = useParams()
   const router = useRouter()
   const [data, setData] = useState<MutasiDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [showDelete, setShowDelete] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
 
   useEffect(() => {
@@ -51,7 +64,6 @@ export default function MutasiDetailPage() {
   }, [params.id])
 
   const handleDelete = async () => {
-    if (!confirm("Hapus mutasi ini? Lokasi barang tidak akan dikembalikan otomatis.")) return
     setDeleteLoading(true)
     try {
       const res = await fetch(`/api/mutasi/${params.id}`, { method: "DELETE" })
@@ -64,140 +76,86 @@ export default function MutasiDetailPage() {
   }
 
   const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString("id-ID", {
-      year: "numeric", month: "long", day: "numeric"
-    })
+    new Date(dateString).toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" })
 
   const formatDateTime = (dateString: string) =>
-    new Date(dateString).toLocaleDateString("id-ID", {
-      year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit"
-    })
+    new Date(dateString).toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })
 
-  if (loading) return (
-    <div className="flex items-center justify-center py-20">
-      <p className="text-gray-500 dark:text-gray-400">Memuat data...</p>
-    </div>
-  )
+  if (loading) return <LoadingState text="Memuat data mutasi..." />
 
-  if (error) return (
-    <div className="text-center py-20">
-      <p className="text-red-500 mb-4">{error}</p>
-      <Link href="/mutasi" className="text-blue-600 hover:underline">Kembali ke Daftar Mutasi</Link>
-    </div>
-  )
+  if (error) return <EmptyState text={error} />
 
   if (!data) return null
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div>
-          <Link href="/mutasi" className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white mb-2">
-            <ArrowLeft className="w-4 h-4" /> Kembali
-          </Link>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Detail Mutasi</h1>
-        </div>
-        <div className="flex gap-2">
-          <Link href={`/mutasi/${data.id}/edit`} className="flex items-center gap-2 bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors text-sm">
-            <Pencil className="w-4 h-4" /> Edit
-          </Link>
-          <button onClick={handleDelete} disabled={deleteLoading} className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm disabled:opacity-50">
-            <Trash2 className="w-4 h-4" /> {deleteLoading ? "Menghapus..." : "Hapus"}
-          </button>
+      <div className="flex items-center gap-3 mb-6">
+        <BackLink href="/mutasi" />
+        <span className="text-sm font-bold text-muted uppercase tracking-wider">Mutasi</span>
+      </div>
+
+      <PageHeader
+        index="04"
+        title="Detail Mutasi"
+        desc="Perpindahan lokasi aset"
+        extra={<Label color="blue">04 · Mutasi</Label>}
+      >
+        <ButtonLink href={`/mutasi/${data.id}/edit`} variant="warn">Edit</ButtonLink>
+        <Button variant="danger" onClick={() => setShowDelete(true)}>
+          {deleteLoading ? "Menghapus..." : "Hapus"}
+        </Button>
+      </PageHeader>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <Card title="Informasi Mutasi" sub="Data mutasi" icon={Calendar} className="mb-0">
+          <Row label="Barang" value={`${data.barang.namaBarang} (${data.barang.kodeBarang})`} />
+          <Row label="Tanggal Mutasi" value={formatDate(data.tanggalMutasi)} />
+          <Row label="Dilakukan Oleh" value={data.user?.namaLengkap || "-"} />
+          <Row label="Terakhir Diperbarui" value={formatDateTime(data.createdAt)} />
+        </Card>
+
+        <div className="brut-card p-6 bg-warn flex flex-col items-center justify-center text-center">
+          <p className="text-[0.65rem] font-bold uppercase tracking-widest mb-5">Pergerakan Lokasi</p>
+          <div className="brut-card bg-card px-6 py-4 -rotate-1">
+            <MapPin className="w-5 h-5 mx-auto mb-1" strokeWidth={3} />
+            <p className="text-xs font-bold uppercase tracking-wider text-muted">Asal</p>
+            <p className="brut-title brut-h3 mt-0.5">{data.lokasiAsal}</p>
+          </div>
+          <ArrowDown className="w-6 h-6 my-3 rotate-0" strokeWidth={3} />
+          <div className="brut-card bg-primary text-white px-6 py-4 rotate-1">
+            <MapPin className="w-5 h-5 mx-auto mb-1" strokeWidth={3} />
+            <p className="text-xs font-bold uppercase tracking-wider opacity-80">Tujuan</p>
+            <p className="brut-title brut-h3 mt-0.5">{data.lokasiTujuan}</p>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Informasi Mutasi */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Informasi Mutasi</h2>
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <Package className="w-5 h-5 text-gray-400 mt-0.5" />
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Barang</p>
-                <p className="text-gray-800 dark:text-white font-medium">{data.barang.namaBarang}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">{data.barang.kodeBarang}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Tanggal Mutasi</p>
-                <p className="text-gray-800 dark:text-white">{formatDate(data.tanggalMutasi)}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <User className="w-5 h-5 text-gray-400 mt-0.5" />
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Dilakukan Oleh</p>
-                <p className="text-gray-800 dark:text-white">{data.user?.namaLengkap || "-"}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Terakhir Diperbarui</p>
-                <p className="text-gray-800 dark:text-white text-sm">{formatDateTime(data.createdAt)}</p>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="space-y-6">
+        <Card title="Keterangan" sub="Catatan mutasi" icon={Package}>
+          <p className="text-sm font-semibold whitespace-pre-wrap text-ink">{data.keterangan || "Tidak ada keterangan."}</p>
+        </Card>
 
-        {/* Pergerakan Lokasi */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Pergerakan Lokasi</h2>
-          <div className="flex flex-col items-center justify-center gap-4 py-6">
-            <div className="w-full max-w-xs">
-              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-600">
-                <MapPin className="w-5 h-5 text-gray-400 mx-auto mb-1" />
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Asal</p>
-                <p className="text-gray-800 dark:text-white font-medium mt-1">{data.lokasiAsal}</p>
-              </div>
-            </div>
-            <ArrowRight className="w-6 h-6 text-blue-500 rotate-90" />
-            <div className="w-full max-w-xs">
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-center border border-blue-200 dark:border-blue-800">
-                <MapPin className="w-5 h-5 text-blue-500 mx-auto mb-1" />
-                <p className="text-xs text-blue-500 uppercase tracking-wide">Tujuan</p>
-                <p className="text-gray-800 dark:text-white font-medium mt-1">{data.lokasiTujuan}</p>
-              </div>
-            </div>
+        <Card title="Informasi Barang" sub="Data terkait" icon={Package}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8">
+            <Row label="Nama Barang" value={data.barang.namaBarang} />
+            <Row label="Kode Barang" value={<span className="font-mono">{data.barang.kodeBarang}</span>} />
+            <Row label="Lokasi Saat Ini" value={data.barang.lokasi} />
+            <Row label="Kondisi" value={data.barang.kondisi} />
           </div>
-        </div>
-
-        {/* Info Tambahan */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Keterangan</h2>
-          <p className="text-gray-600 dark:text-gray-300 text-sm whitespace-pre-wrap">{data.keterangan || "Tidak ada keterangan."}</p>
-        </div>
-
-        {/* Info Barang Terkait */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Informasi Barang</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Nama Barang</p>
-              <p className="text-gray-800 dark:text-white font-medium">{data.barang.namaBarang}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Kode Barang</p>
-              <p className="text-gray-800 dark:text-white font-mono">{data.barang.kodeBarang}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Lokasi Saat Ini</p>
-              <p className="text-gray-800 dark:text-white">{data.barang.lokasi}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Kondisi</p>
-              <p className="text-gray-800 dark:text-white">{data.barang.kondisi}</p>
-            </div>
+          <div className="mt-5">
+            <ButtonLink href={`/barang/${data.barang.id}`} variant="primary">Lihat Detail Barang</ButtonLink>
           </div>
-          <Link href={`/barang/${data.barang.id}`} className="inline-flex items-center gap-2 text-blue-600 hover:underline text-sm mt-4">
-            Lihat Detail Barang →
-          </Link>
-        </div>
+        </Card>
       </div>
+
+      <ConfirmModal
+        open={showDelete}
+        title="Hapus Mutasi?"
+        message="Lokasi barang tidak akan dikembalikan otomatis."
+        onCancel={() => setShowDelete(false)}
+        onConfirm={handleDelete}
+        label={deleteLoading ? "Menghapus..." : "Hapus"}
+      />
     </div>
   )
 }

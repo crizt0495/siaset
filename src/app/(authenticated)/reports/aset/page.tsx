@@ -1,14 +1,24 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import Link from "next/link"
-import { ArrowLeft, FileDown, ChevronLeft, ChevronRight, Package } from "lucide-react"
+import { FileDown, Package } from "lucide-react"
+import {
+  PageHeader, BackLink, Badge, Card, StatCard, Select, Table,
+  TH, TD, Tr, Pagination, EmptyState, Button,
+} from "@/components/ui"
 
 interface Aset {
   id: string; kodeBarang: string; namaBarang: string; kondisi: string; status: string; lokasi: string; jumlah: number; hargaPerolehan: number
   komisi?: { namaKomisi: string } | null
 }
 interface Komisi { id: string; namaKomisi: string }
+
+const kondisiColor: Record<string, "green" | "red" | "yellow" | "default"> = {
+  Baik: "green", Rusak: "red", Hilang: "yellow",
+}
+const statusColor: Record<string, "blue" | "yellow" | "default"> = {
+  Aktif: "blue", Nonaktif: "yellow",
+}
 
 export default function LaporanAset() {
   const [data, setData] = useState<Aset[]>([])
@@ -48,124 +58,82 @@ export default function LaporanAset() {
 
   const formatRp = (n: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n)
 
-  const kondisiBadge = (k: string) => {
-    const colors: Record<string, string> = { Baik: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400", Rusak: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400", Hilang: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300" }
-    return <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[k] || ""}`}>{k}</span>
-  }
-  const statusBadge = (s: string) => {
-    const colors: Record<string, string> = { Aktif: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400", Nonaktif: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" }
-    return <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[s] || ""}`}>{s}</span>
-  }
-
   return (
     <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <Link href="/reports" className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Laporan Aset</h1>
-        </div>
-        <button onClick={() => alert("Coming soon")} className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-          <FileDown className="w-4 h-4" /> Export
-        </button>
+      <div className="flex items-center gap-3 mb-6">
+        <BackLink href="/reports" />
+        <span className="text-sm font-bold text-muted uppercase tracking-wider">Laporan</span>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg"><Package className="w-5 h-5 text-blue-600 dark:text-blue-400" /></div>
-            <div><p className="text-xs text-gray-500 dark:text-gray-400">Total Aset</p><p className="text-lg font-bold text-gray-800 dark:text-white">{stats.total}</p></div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg"><Package className="w-5 h-5 text-green-600 dark:text-green-400" /></div>
-            <div><p className="text-xs text-gray-500 dark:text-gray-400">Aktif</p><p className="text-lg font-bold text-gray-800 dark:text-white">{stats.aktif}</p></div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg"><Package className="w-5 h-5 text-yellow-600 dark:text-yellow-400" /></div>
-            <div><p className="text-xs text-gray-500 dark:text-gray-400">Nonaktif</p><p className="text-lg font-bold text-gray-800 dark:text-white">{stats.nonaktif}</p></div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg"><Package className="w-5 h-5 text-purple-600 dark:text-purple-400" /></div>
-            <div><p className="text-xs text-gray-500 dark:text-gray-400">Total Nilai</p><p className="text-lg font-bold text-gray-800 dark:text-white">{formatRp(stats.totalHarga)}</p></div>
-          </div>
-        </div>
+      <PageHeader
+        index="07"
+        title="Laporan Aset"
+        desc="Data seluruh aset dan inventaris"
+      >
+        <Button onClick={() => alert("Coming soon")} variant="good">
+          <FileDown className="w-4 h-4" strokeWidth={3} /> Export
+        </Button>
+      </PageHeader>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <StatCard icon={Package} title="Total Aset" value={stats.total} face="primary" />
+        <StatCard icon={Package} title="Aktif" value={stats.aktif} face="good" />
+        <StatCard icon={Package} title="Nonaktif" value={stats.nonaktif} face="warn" />
+        <StatCard icon={Package} title="Total Nilai" value={formatRp(stats.totalHarga)} face="vibe" />
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <select value={filterKomisi} onChange={e => { setFilterKomisi(e.target.value); setPage(1) }}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
-              <option value="">Semua Komisi</option>
-              {komisiList.map(k => <option key={k.id} value={k.id}>{k.namaKomisi}</option>)}
-            </select>
-            <select value={filterKondisi} onChange={e => { setFilterKondisi(e.target.value); setPage(1) }}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
-              <option value="">Semua Kondisi</option>
-              <option value="Baik">Baik</option><option value="Rusak">Rusak</option><option value="Hilang">Hilang</option>
-            </select>
-            <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1) }}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
-              <option value="">Semua Status</option>
-              <option value="Aktif">Aktif</option><option value="Nonaktif">Nonaktif</option>
-            </select>
-          </div>
+      <Card noPad>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 border-b-[3px] border-ink bg-paper2">
+          <Select value={filterKomisi} onChange={e => { setFilterKomisi(e.target.value); setPage(1) }}>
+            <option value="">Semua Komisi</option>
+            {komisiList.map(k => <option key={k.id} value={k.id}>{k.namaKomisi}</option>)}
+          </Select>
+          <Select value={filterKondisi} onChange={e => { setFilterKondisi(e.target.value); setPage(1) }}>
+            <option value="">Semua Kondisi</option>
+            <option value="Baik">Baik</option><option value="Rusak">Rusak</option><option value="Hilang">Hilang</option>
+          </Select>
+          <Select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1) }}>
+            <option value="">Semua Status</option>
+            <option value="Aktif">Aktif</option><option value="Nonaktif">Nonaktif</option>
+          </Select>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-700/50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">No</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Kode</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Nama</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Komisi</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Kondisi</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Lokasi</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Harga</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Jumlah</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {loading ? (
-                <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-500">Memuat data...</td></tr>
-              ) : data.length === 0 ? (
-                <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-500">Tidak ada data</td></tr>
-              ) : data.map((a, i) => (
-                <tr key={a.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{(page - 1) * 10 + i + 1}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-gray-800 dark:text-gray-200">{a.kodeBarang}</td>
-                  <td className="px-4 py-3 text-gray-800 dark:text-gray-200 font-medium">{a.namaBarang}</td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{a.komisi?.namaKomisi || "-"}</td>
-                  <td className="px-4 py-3">{kondisiBadge(a.kondisi)}</td>
-                  <td className="px-4 py-3">{statusBadge(a.status)}</td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{a.lokasi}</td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300 text-right">{formatRp(a.hargaPerolehan)}</td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300 text-center">{a.jumlah}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table
+          head={
+            <tr>
+              <TH className="!w-12">No</TH>
+              <TH>Kode</TH>
+              <TH>Nama</TH>
+              <TH>Komisi</TH>
+              <TH>Kondisi</TH>
+              <TH>Status</TH>
+              <TH>Lokasi</TH>
+              <TH className="!text-right">Harga</TH>
+              <TH className="!text-center">Jumlah</TH>
+            </tr>
+          }
+        >
+          {loading ? (
+            <Tr><TD colSpan={9} className="!py-10 text-center text-muted font-bold">Memuat data...</TD></Tr>
+          ) : data.length === 0 ? (
+            <Tr><TD colSpan={9} className="!p-0"><EmptyState icon={Package} text="Tidak ada data" /></TD></Tr>
+          ) : data.map((a, i) => (
+            <Tr key={a.id}>
+              <TD className="font-bold text-muted">{(page - 1) * 10 + i + 1}</TD>
+              <TD className="font-mono text-xs font-bold">{a.kodeBarang}</TD>
+              <TD className="font-bold">{a.namaBarang}</TD>
+              <TD className="text-muted font-semibold">{a.komisi?.namaKomisi || "-"}</TD>
+              <TD><Badge color={kondisiColor[a.kondisi] || "default"}>{a.kondisi}</Badge></TD>
+              <TD><Badge color={statusColor[a.status] || "default"}>{a.status}</Badge></TD>
+              <TD className="text-muted font-semibold">{a.lokasi}</TD>
+              <TD className="!text-right brut-num">{formatRp(a.hargaPerolehan)}</TD>
+              <TD className="!text-center brut-num">{a.jumlah}</TD>
+            </Tr>
+          ))}
+        </Table>
 
-        <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Halaman {page} dari {totalPages}</p>
-          <div className="flex gap-2">
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}
-              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"><ChevronLeft className="w-4 h-4" /></button>
-            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}
-              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"><ChevronRight className="w-4 h-4" /></button>
-          </div>
-        </div>
-      </div>
+        <Pagination page={page} totalPages={totalPages} setPage={setPage} />
+      </Card>
     </div>
   )
 }

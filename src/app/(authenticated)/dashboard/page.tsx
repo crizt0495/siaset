@@ -11,9 +11,11 @@ import {
   CheckCircle,
   XCircle,
   Activity,
+  Landmark,
 } from "lucide-react"
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from "chart.js"
 import { Bar, Doughnut } from "react-chartjs-2"
+import { PageHeader, Marquee, StatCard, Card, Label, EmptyState, LoadingState, ErrorState, Badge } from "@/components/ui"
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement)
 
@@ -66,23 +68,15 @@ function formatDateTime(dateStr: string) {
   })
 }
 
-function kondisiColor(kondisi: string) {
-  switch (kondisi) {
-    case "Baik":
-      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-    case "Rusak":
-      return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-    case "Hilang":
-      return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-    default:
-      return "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-  }
+const kondisiBadge: Record<string, { c: "green" | "red" | "yellow"; t: string }> = {
+  Baik: { c: "green", t: "Baik" },
+  Rusak: { c: "red", t: "Rusak" },
+  Hilang: { c: "yellow", t: "Hilang" },
 }
 
-function statusColor(status: string) {
-  return status === "Aktif"
-    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-    : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+const statusBadge: Record<string, "blue" | "gray"> = {
+  Aktif: "blue",
+  Nonaktif: "gray",
 }
 
 export default function DashboardPage() {
@@ -101,83 +95,46 @@ export default function DashboardPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Memuat data dashboard...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (error || !data) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <XCircle className="w-12 h-12 text-red-500" />
-          <p className="text-gray-700 dark:text-gray-300 font-medium">Gagal memuat dashboard</p>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">{error || "Data tidak tersedia"}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm transition-colors"
-          >
-            Coba Lagi
-          </button>
-        </div>
-      </div>
-    )
-  }
+  if (loading) return <LoadingState text="Memuat dashboard..." />
+  if (error || !data) return <ErrorState message={error || "Data tidak tersedia"} onRetry={() => window.location.reload()} />
 
   const { stats, recentBarang, recentActivities, barangByKomisi, barangByKondisi } = data
 
-  const statCards = [
-    {
-      title: "Total Aset",
-      value: stats.totalBarang,
-      icon: Package,
-      gradient: "from-blue-500 to-blue-600",
-      lightBg: "bg-blue-50 dark:bg-blue-950/50",
-      iconBg: "bg-blue-100 dark:bg-blue-900/50",
-      iconColor: "text-blue-600 dark:text-blue-400",
-      textColor: "text-blue-600 dark:text-blue-400",
-      subtext: `${stats.barangAktif} aktif`,
-    },
-    {
-      title: "Dipinjam",
-      value: stats.peminjamanAktif,
-      icon: ArrowRightLeft,
-      gradient: "from-amber-500 to-orange-500",
-      lightBg: "bg-amber-50 dark:bg-amber-950/50",
-      iconBg: "bg-amber-100 dark:bg-amber-900/50",
-      iconColor: "text-amber-600 dark:text-amber-400",
-      textColor: "text-amber-600 dark:text-amber-400",
-      subtext: "saat ini",
-    },
-    {
-      title: "Rusak / Hilang",
-      value: stats.barangRusak + stats.barangHilang,
-      icon: AlertTriangle,
-      gradient: "from-red-500 to-rose-500",
-      lightBg: "bg-red-50 dark:bg-red-950/50",
-      iconBg: "bg-red-100 dark:bg-red-900/50",
-      iconColor: "text-red-600 dark:text-red-400",
-      textColor: "text-red-600 dark:text-red-400",
-      subtext: `${stats.barangRusak} rusak, ${stats.barangHilang} hilang`,
-    },
-    {
-      title: "Komisi",
-      value: stats.totalKomisi,
-      icon: Users,
-      gradient: "from-purple-500 to-violet-500",
-      lightBg: "bg-purple-50 dark:bg-purple-950/50",
-      iconBg: "bg-purple-100 dark:bg-purple-900/50",
-      iconColor: "text-purple-600 dark:text-purple-400",
-      textColor: "text-purple-600 dark:text-purple-400",
-      subtext: "terdaftar",
-    },
+  const quickStats = [
+    { label: "Mutasi", value: stats.totalMutasi, icon: TrendingUp, color: "vibe" as const },
+    { label: "Penghapusan", value: stats.totalPenghapusan, icon: XCircle, color: "danger" as const },
+    { label: "Pemeliharaan", value: stats.totalPemeliharaan, icon: Activity, color: "good" as const },
+    { label: "Aset Aktif", value: stats.barangAktif, icon: CheckCircle, color: "warn" as const },
   ]
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      title: { display: false },
+      tooltip: {
+        backgroundColor: "#16161a",
+        titleFont: { family: "'Space Grotesk', sans-serif", size: 13, weight: 700 as const },
+        bodyFont: { family: "'Space Grotesk', sans-serif", size: 12, weight: 600 as const },
+        padding: 12,
+        displayColors: false,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: { stepSize: 1, font: { size: 12, weight: 700 as const }, color: "#6b6557" },
+        grid: { color: "rgba(107,101,87,0.18)", lineWidth: 1 },
+        border: { color: "#16161a", width: 3 },
+      },
+      x: {
+        ticks: { font: { size: 11, weight: 600 as const }, color: "#6b6557", maxRotation: 45 },
+        grid: { display: false },
+        border: { color: "#16161a", width: 3 },
+      },
+    },
+  }
 
   const barChartData = {
     labels: barangByKomisi.map((k) => k.namaKomisi),
@@ -185,71 +142,19 @@ export default function DashboardPage() {
       {
         label: "Jumlah Aset",
         data: barangByKomisi.map((k) => k.count),
-        backgroundColor: [
-          "rgba(59, 130, 246, 0.7)",
-          "rgba(16, 185, 129, 0.7)",
-          "rgba(245, 158, 11, 0.7)",
-          "rgba(139, 92, 246, 0.7)",
-          "rgba(236, 72, 153, 0.7)",
-          "rgba(20, 184, 166, 0.7)",
-          "rgba(249, 115, 22, 0.7)",
-          "rgba(99, 102, 241, 0.7)",
-        ],
-        borderColor: [
-          "rgb(59, 130, 246)",
-          "rgb(16, 185, 129)",
-          "rgb(245, 158, 11)",
-          "rgb(139, 92, 246)",
-          "rgb(236, 72, 153)",
-          "rgb(20, 184, 166)",
-          "rgb(249, 115, 22)",
-          "rgb(99, 102, 241)",
-        ],
-        borderWidth: 1,
-        borderRadius: 6,
+        backgroundColor: ["#2b59ff", "#23c677", "#ffc829", "#8b5cf6", "#ff4d3d", "#0cc0df", "#ff7a1a", "#16161a"],
+        borderColor: "#16161a",
+        borderWidth: 3,
+        borderRadius: 0,
+        maxBarThickness: 42,
       },
     ],
   }
 
-  const barChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      title: { display: false },
-      tooltip: {
-        backgroundColor: "rgba(0,0,0,0.8)",
-        titleFont: { size: 13 },
-        bodyFont: { size: 12 },
-        padding: 10,
-        cornerRadius: 8,
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          stepSize: 1,
-          font: { size: 12 },
-          color: "#9ca3af",
-        },
-        grid: { color: "rgba(156,163,175,0.15)" },
-      },
-      x: {
-        ticks: {
-          font: { size: 11 },
-          color: "#9ca3af",
-          maxRotation: 45,
-        },
-        grid: { display: false },
-      },
-    },
-  }
-
   const kondisiColorMap: Record<string, string> = {
-    Baik: "rgba(34, 197, 94, 0.75)",
-    Rusak: "rgba(239, 68, 68, 0.75)",
-    Hilang: "rgba(234, 179, 8, 0.75)",
+    Baik: "#23c677",
+    Rusak: "#ff4d3d",
+    Hilang: "#ffc829",
   }
 
   const doughnutChartData = {
@@ -257,16 +162,10 @@ export default function DashboardPage() {
     datasets: [
       {
         data: barangByKondisi.map((k) => k.count),
-        backgroundColor: barangByKondisi.map((k) => kondisiColorMap[k.kondisi] || "rgba(156,163,175,0.75)"),
-        borderColor: barangByKondisi.map((k) =>
-          k.kondisi === "Baik"
-            ? "rgb(34, 197, 94)"
-            : k.kondisi === "Rusak"
-              ? "rgb(239, 68, 68)"
-              : "rgb(234, 179, 8)"
-        ),
-        borderWidth: 2,
-        hoverOffset: 8,
+        backgroundColor: barangByKondisi.map((k) => kondisiColorMap[k.kondisi] || "#6b6557"),
+        borderColor: "#16161a",
+        borderWidth: 3,
+        hoverOffset: 12,
       },
     ],
   }
@@ -274,24 +173,24 @@ export default function DashboardPage() {
   const doughnutOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    cutout: "60%",
+    cutout: "62%",
     plugins: {
       legend: {
         position: "bottom" as const,
         labels: {
           padding: 16,
           usePointStyle: true,
-          pointStyle: "circle",
-          font: { size: 13 },
-          color: "#9ca3af",
+          pointStyle: "rect" as const,
+          font: { family: "'Space Grotesk', sans-serif", size: 12, weight: 700 as const },
+          color: "#6b6557",
         },
       },
       tooltip: {
-        backgroundColor: "rgba(0,0,0,0.8)",
-        titleFont: { size: 13 },
-        bodyFont: { size: 12 },
-        padding: 10,
-        cornerRadius: 8,
+        backgroundColor: "#16161a",
+        titleFont: { family: "'Space Grotesk', sans-serif", size: 13, weight: 700 as const },
+        bodyFont: { family: "'Space Grotesk', sans-serif", size: 12, weight: 600 as const },
+        padding: 12,
+        displayColors: false,
         callbacks: {
           label: function (context: any) {
             const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0)
@@ -306,274 +205,187 @@ export default function DashboardPage() {
   const totalKondisi = barangByKondisi.reduce((sum, k) => sum + k.count, 0)
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Dashboard</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Ringkasan data aset GKJW Probolinggo
-          </p>
-        </div>
-        <div className="hidden sm:flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-          <Clock className="w-4 h-4" />
-          {new Date().toLocaleDateString("id-ID", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          })}
-        </div>
+    <div>
+      <PageHeader
+        index="01"
+        title="Dashboard"
+        desc="Ringkasan data aset GKJW Probolinggo"
+        extra={
+          <span className="brut-sticker-help hidden sm:inline-flex">
+            <Clock className="w-4 h-4" strokeWidth={3} />
+            {new Date().toLocaleDateString("id-ID", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </span>
+        }
+      />
+
+      <Marquee
+        items={[
+          "Total Aset " + stats.totalBarang,
+          "Dipinjam " + stats.peminjamanAktif,
+          "Rusak " + stats.barangRusak,
+          "Hilang " + stats.barangHilang,
+          "Komisi " + stats.totalKomisi,
+          "GKJW PROBOLINGGO",
+        ]}
+      />
+
+      {/* Stat cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <StatCard
+          icon={Package}
+          title="Total Aset"
+          value={stats.totalBarang}
+          sub={`${stats.barangAktif} aktif`}
+          face="primary"
+        />
+        <StatCard
+          icon={ArrowRightLeft}
+          title="Dipinjam"
+          value={stats.peminjamanAktif}
+          sub="saat ini"
+          face="warn"
+        />
+        <StatCard
+          icon={AlertTriangle}
+          title="Rusak / Hilang"
+          value={stats.barangRusak + stats.barangHilang}
+          sub={`${stats.barangRusak} rusak · ${stats.barangHilang} hilang`}
+          face="danger"
+        />
+        <StatCard
+          icon={Landmark}
+          title="Komisi"
+          value={stats.totalKomisi}
+          sub="terdaftar"
+          face="vibe"
+        />
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((card) => {
-          const Icon = card.icon
-          return (
-            <div
-              key={card.title}
-              className={`${card.lightBg} rounded-2xl p-5 border border-gray-100 dark:border-gray-800 hover:shadow-lg transition-shadow duration-200`}
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{card.title}</p>
-                  <p className={`text-3xl font-bold mt-1 ${card.textColor}`}>{card.value}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{card.subtext}</p>
-                </div>
-                <div className={`${card.iconBg} p-3 rounded-xl`}>
-                  <Icon className={`w-6 h-6 ${card.iconColor}`} />
-                </div>
-              </div>
-              <div className={`mt-3 h-1.5 rounded-full bg-gradient-to-r ${card.gradient} opacity-30`} />
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Quick Stats Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: "Mutasi", value: stats.totalMutasi, icon: TrendingUp, color: "text-indigo-600 dark:text-indigo-400" },
-          { label: "Penghapusan", value: stats.totalPenghapusan, icon: XCircle, color: "text-rose-600 dark:text-rose-400" },
-          { label: "Pemeliharaan", value: stats.totalPemeliharaan, icon: Activity, color: "text-teal-600 dark:text-teal-400" },
-          { label: "Aset Aktif", value: stats.barangAktif, icon: CheckCircle, color: "text-emerald-600 dark:text-emerald-400" },
-        ].map((item) => {
+      {/* Quick stats chips */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {quickStats.map((item) => {
           const Icon = item.icon
+          const face =
+            item.color === "good" ? "bg-good" :
+            item.color === "danger" ? "bg-danger text-white" :
+            item.color === "warn" ? "bg-warn" : "bg-vibe text-white"
           return (
-            <div
-              key={item.label}
-              className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-100 dark:border-gray-800 flex items-center gap-3"
-            >
-              <Icon className={`w-5 h-5 ${item.color} shrink-0`} />
+            <div key={item.label} className={`brut-card p-4 flex items-center gap-3 ${face} rotate-[0.5deg] hover:rotate-0 transition-transform`}>
+              <span className="w-10 h-10 shrink-0 grid place-items-center border-[3px] border-ink bg-card text-ink -rotate-3">
+                <Icon className="w-5 h-5" strokeWidth={2.75} />
+              </span>
               <div className="min-w-0">
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{item.label}</p>
-                <p className="text-lg font-bold text-gray-800 dark:text-white">{item.value}</p>
+                <p className="text-[0.62rem] font-bold uppercase tracking-widest opacity-70">{item.label}</p>
+                <p className="brut-num text-xl leading-tight">{item.value}</p>
               </div>
             </div>
           )
         })}
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Bar Chart - Assets by Komisi */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-base font-semibold text-gray-800 dark:text-white">Aset per Komisi</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Distribusi aset berdasarkan komisi</p>
-            </div>
-            <div className="bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-full">
-              <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                {barangByKomisi.length} Komisi
-              </span>
-            </div>
-          </div>
-          <div className="h-64 sm:h-72">
+      {/* Charts row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <Card
+          title="Aset per Komisi"
+          sub="Distribusi aset berdasarkan komisi"
+          icon={Package}
+          className="lg:col-span-2"
+          actions={<span className="brut-sticker-help !px-3 !py-1 !text-[0.62rem]">{barangByKomisi.length} Komisi</span>}
+        >
+          <div className="h-72">
             {barangByKomisi.length > 0 ? (
-              <Bar data={barChartData} options={barChartOptions} />
+              <Bar data={barChartData} options={chartOptions} />
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500 text-sm">
-                Belum ada data komisi
-              </div>
+              <EmptyState text="Belum ada data komisi" icon={Landmark} />
             )}
           </div>
-        </div>
+        </Card>
 
-        {/* Doughnut Chart - Assets by Kondisi */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800">
-          <div className="mb-4">
-            <h2 className="text-base font-semibold text-gray-800 dark:text-white">Aset per Kondisi</h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Status kondisi seluruh aset</p>
-          </div>
-          <div className="h-64 sm:h-72">
+        <Card title="Aset per Kondisi" sub="Status kondisi seluruh aset" icon={Activity}>
+          <div className="h-64">
             {barangByKondisi.length > 0 ? (
               <Doughnut data={doughnutChartData} options={doughnutOptions} />
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500 text-sm">
-                Belum ada data kondisi
-              </div>
+              <EmptyState text="Belum ada data kondisi" icon={Activity} />
             )}
           </div>
-          <div className="mt-3 flex justify-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+          <div className="mt-3 flex justify-center gap-3 flex-wrap">
             {barangByKondisi.map((k) => (
-              <span key={k.kondisi} className="flex items-center gap-1.5">
+              <span key={k.kondisi} className="flex items-center gap-1.5 text-xs font-bold text-muted uppercase">
                 <span
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{
-                    backgroundColor:
-                      k.kondisi === "Baik"
-                        ? "rgb(34, 197, 94)"
-                        : k.kondisi === "Rusak"
-                          ? "rgb(239, 68, 68)"
-                          : "rgb(234, 179, 8)",
-                  }}
+                  className="w-3 h-3 border-2 border-ink"
+                  style={{ backgroundColor: kondisiColorMap[k.kondisi] }}
                 />
                 {k.kondisi} ({totalKondisi > 0 ? ((k.count / totalKondisi) * 100).toFixed(0) : 0}%)
               </span>
             ))}
           </div>
-        </div>
+        </Card>
       </div>
 
-      {/* Bottom Row: Recent Assets & Activities */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Recent Assets Table */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-          <div className="p-5 pb-0">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-base font-semibold text-gray-800 dark:text-white">Aset Terbaru</h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">5 aset yang baru ditambahkan</p>
-              </div>
-              <Package className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+      {/* Bottom row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card title="Aset Terbaru" sub="5 aset yang baru ditambahkan" icon={Package}>
+          {recentBarang.length > 0 ? (
+            <div className="divide-y-[3px] divide-ink border-2 border-ink">
+              {recentBarang.map((barang) => (
+                <div key={barang.id} className="flex items-center justify-between gap-3 px-3 py-2.5 hover:bg-paper2 transition-colors">
+                  <div className="min-w-0">
+                    <p className="font-bold text-sm truncate">{barang.namaBarang}</p>
+                    <p className="font-mono text-xs text-muted">{barang.kodeBarang}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="hidden sm:inline text-xs font-bold text-muted">{barang.komisi?.namaKomisi || "-"}</span>
+                    <Badge color={kondisiBadge[barang.kondisi]?.c || "default"}>{barang.kondisi}</Badge>
+                    <Badge color={statusBadge[barang.status] || "default"}>{barang.status}</Badge>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-t border-gray-100 dark:border-gray-800">
-                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Kode
-                  </th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Nama
-                  </th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Komisi
-                  </th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Kondisi
-                  </th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-                {recentBarang.length > 0 ? (
-                  recentBarang.map((barang) => (
-                    <tr
-                      key={barang.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                    >
-                      <td className="px-5 py-3 font-mono text-xs font-medium text-gray-700 dark:text-gray-300">
-                        {barang.kodeBarang}
-                      </td>
-                      <td className="px-5 py-3 text-gray-800 dark:text-gray-200 max-w-[180px] truncate">
-                        {barang.namaBarang}
-                      </td>
-                      <td className="px-5 py-3 text-gray-500 dark:text-gray-400 max-w-[120px] truncate">
-                        {barang.komisi?.namaKomisi || "-"}
-                      </td>
-                      <td className="px-5 py-3">
-                        <span
-                          className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${kondisiColor(barang.kondisi)}`}
-                        >
-                          {barang.kondisi}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3">
-                        <span
-                          className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(barang.status)}`}
-                        >
-                          {barang.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="px-5 py-8 text-center text-gray-400 dark:text-gray-500 text-sm"
-                    >
-                      Belum ada data aset
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+          ) : (
+            <EmptyState text="Belum ada data aset" icon={Package} />
+          )}
+        </Card>
 
-        {/* Recent Activities */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-          <div className="p-5 pb-0">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-base font-semibold text-gray-800 dark:text-white">Aktivitas Terbaru</h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">10 aktivitas sistem terakhir</p>
-              </div>
-              <Activity className="w-5 h-5 text-gray-400 dark:text-gray-500" />
-            </div>
-          </div>
-          <div className="max-h-[420px] overflow-y-auto">
-            {recentActivities.length > 0 ? (
-              <ul className="divide-y divide-gray-50 dark:divide-gray-800">
-                {recentActivities.map((activity, idx) => (
-                  <li
-                    key={activity.id}
-                    className="px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="relative mt-1">
-                        <div
-                          className={`w-2.5 h-2.5 rounded-full ${
-                            idx === 0
-                              ? "bg-blue-500"
-                              : "bg-gray-300 dark:bg-gray-600"
-                          }`}
-                        />
-                        {idx < recentActivities.length - 1 && (
-                          <div className="absolute top-3 left-1/2 -translate-x-1/2 w-px h-6 bg-gray-200 dark:bg-gray-700" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-snug">
-                          {activity.aktivitas}
-                        </p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-gray-400 dark:text-gray-500">
-                            {activity.user?.namaLengkap || "Sistem"}
-                          </span>
-                          <span className="text-xs text-gray-300 dark:text-gray-600">•</span>
-                          <span className="text-xs text-gray-400 dark:text-gray-500">
-                            {formatDateTime(activity.waktu)}
-                          </span>
-                        </div>
-                      </div>
+        <Card title="Aktivitas Terbaru" sub="10 aktivitas sistem terakhir" icon={Activity}>
+          {recentActivities.length > 0 ? (
+            <div className="max-h-[380px] overflow-y-auto pr-2">
+              {recentActivities.map((activity, idx) => (
+                <div key={activity.id} className="relative flex items-start gap-4 pb-5 last:pb-0">
+                  <div className="flex flex-col items-center shrink-0">
+                    <span
+                      className={`w-4 h-4 border-2 border-ink ${
+                        idx === 0 ? "bg-warn" : "bg-paper2"
+                      }`}
+                    />
+                    {idx < recentActivities.length - 1 && <span className="w-[3px] flex-1 bg-ink/25 mt-1" />}
+                  </div>
+                  <div className="min-w-0 -mt-0.5">
+                    <p className="text-sm font-bold leading-snug">{activity.aktivitas}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="inline-flex items-center gap-1 border-2 border-ink bg-paper2 px-2 py-0.5 text-[0.65rem] font-bold text-ink uppercase tracking-wider">
+                        {activity.user?.namaLengkap || "Sistem"}
+                      </span>
+                      <span className="text-xs font-bold text-muted">·</span>
+                      <span className="text-xs font-bold text-muted">{formatDateTime(activity.waktu)}</span>
                     </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="px-5 py-8 text-center text-gray-400 dark:text-gray-500 text-sm">
-                Belum ada aktivitas
-              </div>
-            )}
-          </div>
-        </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState text="Belum ada aktivitas" icon={Activity} />
+          )}
+        </Card>
+      </div>
+
+      <div className="mt-6 flex justify-end">
+        <Label icon={Users}>GKJW Jemaat Probolinggo</Label>
       </div>
     </div>
   )

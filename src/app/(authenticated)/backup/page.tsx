@@ -1,7 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Database, Download, Trash2, RefreshCw, CheckCircle, AlertCircle, Clock, HardDrive } from "lucide-react"
+import { Database, Download, Trash2, RefreshCw, CheckCircle, AlertCircle, HardDrive } from "lucide-react"
+import {
+  PageHeader, Label, Card, StatCard, Table, TH, TD, Tr,
+  Button, IconButton, ConfirmModal, EmptyState,
+} from "@/components/ui"
 
 interface BackupFile {
   id: string
@@ -26,10 +30,9 @@ export default function BackupPage() {
   const handleCreateBackup = async () => {
     setCreating(true)
     setMessage(null)
-    // Simulate backup creation since serverless can't run mysqldump
     await new Promise(resolve => setTimeout(resolve, 2000))
     const now = new Date()
-    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "-")
+    const dateStr = now.toISOString().slice(0, 10)
     const timeStr = now.toTimeString().slice(0, 5).replace(":", "-")
     const newBackup: BackupFile = {
       id: Date.now().toString(),
@@ -59,163 +62,105 @@ export default function BackupPage() {
     URL.revokeObjectURL(url)
   }
 
-  const statusIcon = (status: string) => {
-    switch (status) {
-      case "success": return <CheckCircle className="w-4 h-4 text-green-500" />
-      case "pending": return <Clock className="w-4 h-4 text-yellow-500" />
-      case "failed": return <AlertCircle className="w-4 h-4 text-red-500" />
-      default: return null
-    }
-  }
-
   const statusBadge = (status: string) => {
-    const colors: Record<string, string> = {
-      success: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-      pending: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-      failed: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+    const color: Record<string, string> = {
+      success: "brut-badge-green", pending: "brut-badge-yellow", failed: "brut-badge-red",
     }
     const labels: Record<string, string> = { success: "Berhasil", pending: "Menunggu", failed: "Gagal" }
-    return (
-      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${colors[status] || ""}`}>
-        {statusIcon(status)}
-        {labels[status] || status}
-      </span>
-    )
+    return <span className={`brut-badge ${color[status] || "brut-badge-gray"}`}>{labels[status] || status}</span>
   }
 
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-          <Database className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Backup Database</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Kelola backup data aplikasi</p>
-        </div>
+        <span className="brut-sticker w-12 h-12 text-lg -rotate-3"><Database className="w-6 h-6" strokeWidth={3} /></span>
+        <span className="text-sm font-bold text-muted uppercase tracking-wider">Sistem</span>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <HardDrive className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-gray-800 dark:text-white">Buat Backup Baru</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {backups.length} backup tersimpan
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={handleCreateBackup}
-            disabled={creating}
-            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-          >
-            {creating ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                Membuat Backup...
-              </>
-            ) : (
-              <>
-                <Database className="w-4 h-4" />
-                Buat Backup
-              </>
-            )}
-          </button>
-        </div>
-        {message && (
-          <div className={`mt-4 p-3 rounded-lg text-sm flex items-center gap-2 ${
-            message.type === "success"
-              ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400"
-              : "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400"
-          }`}>
-            {message.type === "success" ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-            {message.text}
-          </div>
-        )}
+      <PageHeader
+        index="10"
+        title="Backup Database"
+        desc="Kelola backup data aplikasi"
+        extra={<Label color="purple">10 · Backup</Label>}
+      >
+        <Button onClick={handleCreateBackup} disabled={creating} variant="primary">
+          {creating ? (
+            <>
+              <RefreshCw className="w-4 h-4 animate-spin" strokeWidth={3} /> Membuat Backup...
+            </>
+          ) : (
+            <>
+              <Database className="w-4 h-4" strokeWidth={3} /> Buat Backup
+            </>
+          )}
+        </Button>
+      </PageHeader>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+        <StatCard icon={Database} title="Backup Tersimpan" value={backups.length} face="primary" />
+        <StatCard icon={CheckCircle} title="Sukses" value={backups.filter(b => b.status === "success").length} face="good" />
+        <StatCard icon={HardDrive} title="Rata-rata Ukuran" value="±2.3 MB" face="warn" />
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Daftar Backup</h2>
-        </div>
-        {backups.length === 0 ? (
-          <div className="p-8 text-center">
-            <Database className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-            <p className="text-sm text-gray-500 dark:text-gray-400">Belum ada backup</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-gray-700/50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">No</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Nama File</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Ukuran</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Tanggal</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {backups.map((backup, i) => (
-                  <tr key={backup.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{i + 1}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-gray-800 dark:text-gray-200">{backup.filename}</td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{backup.size}</td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{backup.createdAt}</td>
-                    <td className="px-4 py-3">{statusBadge(backup.status)}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => handleDownload(backup)}
-                          className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
-                          title="Download"
-                        >
-                          <Download className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => setDeleteId(backup.id)}
-                          className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                          title="Hapus"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {deleteId && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">Hapus Backup?</h3>
-            <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">Backup yang dihapus tidak dapat dikembalikan.</p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setDeleteId(null)}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-              >
-                Batal
-              </button>
-              <button
-                onClick={() => handleDeleteBackup(deleteId)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700"
-              >
-                Hapus
-              </button>
-            </div>
-          </div>
+      {message && (
+        <div className={`brut-card p-4 mb-6 flex items-center gap-3 ${message.type === "success" ? "bg-good" : "bg-danger text-white"}`}>
+          {message.type === "success" ? <CheckCircle className="w-5 h-5 text-ink" strokeWidth={3} /> : <AlertCircle className="w-5 h-5" strokeWidth={3} />}
+          <p className="text-sm font-bold">{message.text}</p>
         </div>
       )}
+
+      <Card
+        noPad
+        title="Daftar Backup"
+        sub="Riwayat file backup"
+        icon={Database}
+        actions={<Label color="blue">{backups.length} file</Label>}
+      >
+        {backups.length === 0 ? (
+          <EmptyState icon={Database} text="Belum ada backup" />
+        ) : (
+          <Table
+            head={
+              <tr>
+                <TH className="!w-12">No</TH>
+                <TH>Nama File</TH>
+                <TH>Ukuran</TH>
+                <TH>Tanggal</TH>
+                <TH>Status</TH>
+                <TH className="!text-right">Aksi</TH>
+              </tr>
+            }
+          >
+            {backups.map((backup, i) => (
+              <Tr key={backup.id}>
+                <TD className="font-bold text-muted">{i + 1}</TD>
+                <TD className="font-mono text-xs font-bold">{backup.filename}</TD>
+                <TD className="text-muted font-semibold">{backup.size}</TD>
+                <TD className="text-muted font-semibold">{backup.createdAt}</TD>
+                <TD>{statusBadge(backup.status)}</TD>
+                <TD>
+                  <div className="flex items-center justify-end gap-1.5">
+                    <IconButton title="Download" variant="good" onClick={() => handleDownload(backup)}>
+                      <Download className="w-4 h-4" strokeWidth={2.75} />
+                    </IconButton>
+                    <IconButton title="Hapus" variant="danger" onClick={() => setDeleteId(backup.id)}>
+                      <Trash2 className="w-4 h-4" strokeWidth={2.75} />
+                    </IconButton>
+                  </div>
+                </TD>
+              </Tr>
+            ))}
+          </Table>
+        )}
+      </Card>
+
+      <ConfirmModal
+        open={!!deleteId}
+        title="Hapus Backup?"
+        message="Backup yang dihapus tidak dapat dikembalikan."
+        onCancel={() => setDeleteId(null)}
+        onConfirm={() => deleteId && handleDeleteBackup(deleteId)}
+      />
     </div>
   )
 }

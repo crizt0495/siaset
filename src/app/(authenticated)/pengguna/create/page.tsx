@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft } from "lucide-react"
-import Link from "next/link"
+import { Shield } from "lucide-react"
+import {
+  PageHeader, BackLink, ErrorBanner, FormCard, Field,
+  Input, Select, Button, ButtonLink,
+} from "@/components/ui"
 
 interface Komisi { id: string; namaKomisi: string }
 interface Role { id: string; name: string }
@@ -54,52 +57,57 @@ export default function PenggunaCreate() {
 
   return (
     <div>
-      <Link href="/pengguna" className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white mb-4">
-        <ArrowLeft className="w-4 h-4" /> Kembali
-      </Link>
-      <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Tambah Pengguna</h1>
+      <div className="flex items-center gap-3 mb-6">
+        <BackLink href="/pengguna" />
+        <span className="text-sm font-bold text-muted uppercase tracking-wider">Pengguna</span>
+      </div>
 
-      {error && <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>}
+      <PageHeader
+        index="09"
+        title="Tambah Pengguna"
+        desc="Buat akun untuk pengelola aplikasi"
+      />
 
-      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 max-w-2xl">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nama Lengkap *</label>
-            <input type="text" required value={form.namaLengkap} onChange={set("namaLengkap")}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
+      {error && <ErrorBanner message={error} />}
+
+      <form onSubmit={handleSubmit}>
+        <FormCard
+          title="Form Pengguna"
+          icon={Shield}
+          className="max-w-2xl"
+          footer={
+            <>
+              <ButtonLink href="/pengguna" variant="dark">Batal</ButtonLink>
+              <Button type="submit" variant="primary" disabled={loading}>
+                {loading ? "Menyimpan..." : "Simpan"}
+              </Button>
+            </>
+          }
+        >
+          <div className="space-y-5">
+            <Field label="Nama Lengkap" required>
+              <Input type="text" required value={form.namaLengkap} onChange={set("namaLengkap")} placeholder="Nama lengkap pengguna" />
+            </Field>
+            <Field label="Username" required>
+              <Input type="text" required value={form.username} onChange={set("username")} />
+            </Field>
+            <Field label="Password" required>
+              <Input type="password" required value={form.password} onChange={set("password")} />
+            </Field>
+            <Field label="Komisi">
+              <Select value={form.komisiId} onChange={set("komisiId")}>
+                <option value="">Pilih Komisi</option>
+                {komisiList.map(k => <option key={k.id} value={k.id}>{k.namaKomisi}</option>)}
+              </Select>
+            </Field>
+            <Field label="Role" required>
+              <Select required value={form.roleId} onChange={set("roleId")}>
+                <option value="">Pilih Role</option>
+                {roleList.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </Select>
+            </Field>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username *</label>
-            <input type="text" required value={form.username} onChange={set("username")}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password *</label>
-            <input type="password" required value={form.password} onChange={set("password")}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Komisi</label>
-            <select value={form.komisiId} onChange={set("komisiId")}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
-              <option value="">Pilih Komisi</option>
-              {komisiList.map(k => <option key={k.id} value={k.id}>{k.namaKomisi}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role *</label>
-            <select required value={form.roleId} onChange={set("roleId")}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
-              <option value="">Pilih Role</option>
-              {roleList.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-            </select>
-          </div>
-        </div>
-        <div className="mt-6 flex justify-end gap-3">
-          <Link href="/pengguna" className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Batal</Link>
-          <button type="submit" disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50">{loading ? "Menyimpan..." : "Simpan"}</button>
-        </div>
+        </FormCard>
       </form>
     </div>
   )

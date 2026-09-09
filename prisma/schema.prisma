@@ -238,17 +238,3 @@ model UserPermission {
   @@id([userId, permissionId])
   @@map("model_has_permissions")
 }
-
-model QrScanLog {
-  id             String   @id @default(cuid())
-  scanType       String   @map("scan_type")
-  modelId        String   @map("model_id")
-  modelType      String   @map("model_type")
-  qrCodeContent  String   @map("qr_code_content")
-  ipAddress      String?  @map("ip_address")
-  userAgent      String?  @map("user_agent")
-  additionalData Json?    @map("additional_data")
-  scannedAt      DateTime @default(now()) @map("scanned_at")
-
-  @@map("qr_scan_logs")
-}

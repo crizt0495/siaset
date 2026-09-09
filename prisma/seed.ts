@@ -8,7 +8,6 @@ async function main() {
 
   // Clean existing data
   await prisma.aktivitas.deleteMany();
-  await prisma.qrScanLog.deleteMany();
   await prisma.pemeliharaan.deleteMany();
   await prisma.penghapusan.deleteMany();
   await prisma.mutasi.deleteMany();

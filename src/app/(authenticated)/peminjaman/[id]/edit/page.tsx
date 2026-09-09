@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
-import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { ArrowRightLeft } from "lucide-react"
+import {
+  PageHeader, BackLink, ErrorBanner, FormCard, Field,
+  Input, Select, Textarea, Button, ButtonLink, LoadingState,
+} from "@/components/ui"
 
 export default function PeminjamanEdit() {
   const router = useRouter()
@@ -55,57 +58,61 @@ export default function PeminjamanEdit() {
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm(prev => ({ ...prev, [key]: e.target.value }))
 
-  if (loading) return <div className="text-gray-500 dark:text-gray-400">Memuat data...</div>
+  if (loading) return <LoadingState text="Memuat data peminjaman..." />
 
   return (
     <div>
-      <Link href={`/peminjaman/${id}`} className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white mb-4">
-        <ArrowLeft className="w-4 h-4" /> Kembali
-      </Link>
-      <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Edit Peminjaman</h1>
+      <div className="flex items-center gap-3 mb-6">
+        <BackLink href={`/peminjaman/${id}`} />
+        <span className="text-sm font-bold text-muted uppercase tracking-wider">Peminjaman</span>
+      </div>
 
-      {error && <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>}
+      <PageHeader
+        index="03"
+        title="Edit Peminjaman"
+        desc="Perbarui data peminjaman aset"
+      />
 
-      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Peminjam *</label>
-              <input type="text" required value={form.peminjam} onChange={set("peminjam")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
+      {error && <ErrorBanner message={error} />}
+
+      <form onSubmit={handleSubmit}>
+        <FormCard
+          title="Form Peminjaman"
+          icon={ArrowRightLeft}
+          footer={
+            <>
+              <ButtonLink href={`/peminjaman/${id}`} variant="dark">Batal</ButtonLink>
+              <Button type="submit" variant="primary" disabled={submitting}>
+                {submitting ? "Menyimpan..." : "Simpan Perubahan"}
+              </Button>
+            </>
+          }
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-5">
+              <Field label="Peminjam" required>
+                <Input type="text" required value={form.peminjam} onChange={set("peminjam")} />
+              </Field>
+              <Field label="Tanggal Pinjam" required>
+                <Input type="date" required value={form.tanggalPinjam} onChange={set("tanggalPinjam")} />
+              </Field>
+              <Field label="Status">
+                <Select value={form.status} onChange={set("status")}>
+                  <option value="Dipinjam">Dipinjam</option>
+                  <option value="Dikembalikan">Dikembalikan</option>
+                </Select>
+              </Field>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Pinjam *</label>
-              <input type="date" required value={form.tanggalPinjam} onChange={set("tanggalPinjam")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-              <select value={form.status} onChange={set("status")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
-                <option value="Dipinjam">Dipinjam</option>
-                <option value="Dikembalikan">Dikembalikan</option>
-              </select>
+            <div className="space-y-5">
+              <Field label="Tanggal Kembali">
+                <Input type="date" value={form.tanggalKembali} onChange={set("tanggalKembali")} />
+              </Field>
+              <Field label="Keterangan">
+                <Textarea rows={3} value={form.keterangan} onChange={set("keterangan")} />
+              </Field>
             </div>
           </div>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Kembali</label>
-              <input type="date" value={form.tanggalKembali} onChange={set("tanggalKembali")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Keterangan</label>
-              <textarea rows={3} value={form.keterangan} onChange={set("keterangan")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm" />
-            </div>
-          </div>
-        </div>
-        <div className="mt-6 flex justify-end gap-3">
-          <Link href={`/peminjaman/${id}`} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Batal</Link>
-          <button type="submit" disabled={submitting}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50">{submitting ? "Menyimpan..." : "Simpan"}</button>
-        </div>
+        </FormCard>
       </form>
     </div>
   )

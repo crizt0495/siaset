@@ -164,7 +164,7 @@ function mapId(table, oldId) {
 
 let pg = `-- Converted from MySQL to PostgreSQL\n-- Database: neondb\n\n`;
 
-pg += `TRUNCATE TABLE "aktivitas", "pemeliharaan", "penghapusan", "mutasi", "peminjaman", "barang", "model_has_permissions", "model_has_roles", "role_has_permissions", "permissions", "roles", "users", "komisi", "qr_scan_logs" CASCADE;\n\n`;
+pg += `TRUNCATE TABLE "aktivitas", "pemeliharaan", "penghapusan", "mutasi", "peminjaman", "barang", "model_has_permissions", "model_has_roles", "role_has_permissions", "permissions", "roles", "users", "komisi" CASCADE;\n\n`;
 
 // KOMISI
 if (data.komisi?.length) {

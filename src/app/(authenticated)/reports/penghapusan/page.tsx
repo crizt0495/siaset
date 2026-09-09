@@ -1,8 +1,11 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import Link from "next/link"
-import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react"
+import { Trash2 } from "lucide-react"
+import {
+  PageHeader, BackLink, Card, Table, TH, TD, Tr,
+  Pagination, EmptyState, LoadingState,
+} from "@/components/ui"
 
 interface Penghapusan {
   id: string; tanggalPenghapusan: string; alasan: string; keterangan: string
@@ -29,55 +32,50 @@ export default function LaporanPenghapusan() {
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })
 
+  if (loading && data.length === 0) return <LoadingState text="Memuat data penghapusan..." />
+
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/reports" className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
-          <ArrowLeft className="w-4 h-4" />
-        </Link>
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Laporan Penghapusan</h1>
+        <BackLink href="/reports" />
+        <span className="text-sm font-bold text-muted uppercase tracking-wider">Laporan</span>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-700/50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">No</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Barang</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Tanggal</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Alasan</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Keterangan</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {loading ? (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500">Memuat data...</td></tr>
-              ) : data.length === 0 ? (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500">Tidak ada data</td></tr>
-              ) : data.map((p, i) => (
-                <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{(page - 1) * 10 + i + 1}</td>
-                  <td className="px-4 py-3 text-gray-800 dark:text-gray-200 font-medium">{p.barang?.namaBarang || "-"}</td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{formatDate(p.tanggalPenghapusan)}</td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{p.alasan}</td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{p.keterangan || "-"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <PageHeader
+        index="07"
+        title="Laporan Penghapusan"
+        desc="Aset yang telah dihapus"
+      />
 
-        <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Halaman {page} dari {totalPages}</p>
-          <div className="flex gap-2">
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}
-              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"><ChevronLeft className="w-4 h-4" /></button>
-            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}
-              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"><ChevronRight className="w-4 h-4" /></button>
-          </div>
-        </div>
-      </div>
+      <Card noPad>
+        <Table
+          head={
+            <tr>
+              <TH className="!w-12">No</TH>
+              <TH>Barang</TH>
+              <TH>Tanggal</TH>
+              <TH>Alasan</TH>
+              <TH>Keterangan</TH>
+            </tr>
+          }
+        >
+          {loading ? (
+            <Tr><TD colSpan={5} className="!py-10 text-center text-muted font-bold">Memuat data...</TD></Tr>
+          ) : data.length === 0 ? (
+            <Tr><TD colSpan={5} className="!p-0"><EmptyState icon={Trash2} text="Tidak ada data" /></TD></Tr>
+          ) : data.map((p, i) => (
+            <Tr key={p.id}>
+              <TD className="font-bold text-muted">{(page - 1) * 10 + i + 1}</TD>
+              <TD className="font-bold">{p.barang?.namaBarang || "-"}</TD>
+              <TD className="text-muted font-semibold">{formatDate(p.tanggalPenghapusan)}</TD>
+              <TD className="text-muted font-semibold">{p.alasan}</TD>
+              <TD className="text-muted font-semibold">{p.keterangan || "-"}</TD>
+            </Tr>
+          ))}
+        </Table>
+
+        <Pagination page={page} totalPages={totalPages} setPage={setPage} />
+      </Card>
     </div>
   )
 }

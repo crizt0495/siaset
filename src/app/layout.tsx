@@ -1,8 +1,17 @@
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import { Space_Grotesk, Archivo_Black } from "next/font/google"
 import "./globals.css"
 
-const inter = Inter({ subsets: ["latin"] })
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-siaset",
+})
+
+const archivoBlack = Archivo_Black({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-siaset-display",
+})
 
 export const metadata: Metadata = {
   title: "SiAset GKJW - Sistem Inventaris Aset",
@@ -16,7 +25,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id" suppressHydrationWarning>
-      <body className={inter.className}>{children}</body>
+      <body className={`${spaceGrotesk.variable} ${archivoBlack.variable}`}>
+        {children}
+      </body>
     </html>
   )
 }

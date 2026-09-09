@@ -2,8 +2,20 @@
 
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
-import Link from "next/link"
-import { ArrowLeft, Pencil, User } from "lucide-react"
+import { User } from "lucide-react"
+import {
+  PageHeader, BackLink, LoadingState, EmptyState, Card, Label,
+  ButtonLink,
+} from "@/components/ui"
+
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-4 py-2.5 border-b-2 border-ink/10 last:border-0">
+      <span className="text-xs font-bold text-muted uppercase tracking-wider shrink-0">{label}</span>
+      <span className="text-sm font-bold text-right break-words">{value}</span>
+    </div>
+  )
+}
 
 export default function PenggunaDetail() {
   const params = useParams()
@@ -14,57 +26,50 @@ export default function PenggunaDetail() {
     fetch(`/api/pengguna/${params.id}`).then(r => r.json()).then(j => { setData(j); setLoading(false) })
   }, [params.id])
 
-  if (loading) return <div className="text-center py-8 text-gray-500">Memuat data...</div>
-  if (!data) return <div className="text-center py-8 text-gray-500">Data tidak ditemukan</div>
+  if (loading) return <LoadingState text="Memuat data pengguna..." />
+  if (!data) return <EmptyState text="Data tidak ditemukan" />
 
-  const roleBadge = (r: string) => {
-    const colors: Record<string, string> = {
-      Superadmin: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-      Admin: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-      Komisi: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-    }
-    return <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[r] || ""}`}>{r}</span>
-  }
-
-  const statusBadge = (s: string) => {
-    const colors: Record<string, string> = {
-      Active: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-      Inactive: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
-    }
-    return <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[s] || ""}`}>{s}</span>
+  const roleColor: Record<string, string> = {
+    Superadmin: "purple", Admin: "blue", Komisi: "green",
   }
 
   return (
     <div>
-      <Link href="/pengguna" className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white mb-4">
-        <ArrowLeft className="w-4 h-4" /> Kembali
-      </Link>
-
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Detail Pengguna</h1>
-        <Link href={`/pengguna/${data.id}/edit`} className="flex items-center gap-2 bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600">
-          <Pencil className="w-4 h-4" /> Edit
-        </Link>
+      <div className="flex items-center gap-3 mb-6">
+        <BackLink href="/pengguna" />
+        <span className="text-sm font-bold text-muted uppercase tracking-wider">Pengguna</span>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 max-w-2xl">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center gap-2"><User className="w-5 h-5" /> Informasi Pengguna</h2>
-        <div className="space-y-3">
-          {[
-            ["Nama Lengkap", data.namaLengkap],
-            ["Username", data.username],
-            ["Role", roleBadge(data.roles?.[0]?.name || "")],
-            ["Komisi", data.komisi?.namaKomisi || "-"],
-            ["Status", statusBadge(data.active ? "Active" : "Inactive")],
-            ["Dibuat", new Date(data.createdAt).toLocaleDateString("id-ID")],
-          ].map(([label, value]) => (
-            <div key={label} className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-              <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
-              <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{value}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <PageHeader
+        index="09"
+        title={data.namaLengkap || "Detail Pengguna"}
+        desc={`@${data.username || ""}`}
+        extra={<Label color="red">09 · Pengguna</Label>}
+      >
+        <ButtonLink href={`/pengguna/${data.id}/edit`} variant="warn">Edit</ButtonLink>
+      </PageHeader>
+
+      <Card
+        title="Informasi Pengguna"
+        sub="Data akun"
+        icon={User}
+        className="max-w-2xl"
+      >
+        <Row label="Nama Lengkap" value={data.namaLengkap} />
+        <Row label="Username" value={<span className="font-mono">@{data.username}</span>} />
+        <Row label="Role" value={
+          <span className={`brut-badge ${roleColor[data.roles?.[0]?.name] ? `brut-badge-${roleColor[data.roles?.[0]?.name]}` : ""}`}>
+            {data.roles?.[0]?.name || "-"}
+          </span>
+        } />
+        <Row label="Komisi" value={data.komisi?.namaKomisi || "-"} />
+        <Row label="Status" value={
+          <span className={`brut-badge ${data.active ? "brut-badge-green" : ""}`}>
+            {data.active ? "Active" : "Inactive"}
+          </span>
+        } />
+        <Row label="Dibuat" value={new Date(data.createdAt).toLocaleDateString("id-ID")} />
+      </Card>
     </div>
   )
 }

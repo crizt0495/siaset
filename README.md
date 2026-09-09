@@ -26,7 +26,6 @@ Sistem Informasi Inventaris Aset untuk GKJW Jemaat Probolinggo. Dibangun ulang d
 - **Komisi** - Manajemen komisi/departemen
 - **Pengguna** - Manajemen user dengan RBAC (Superadmin only)
 - **Laporan** - Filter, chart, export data
-- **QR Scanner** - Scan manual/input QR code
 - **Backup** - UI manajemen backup (Superadmin)
 
 ### Roles & Permissions
@@ -120,7 +119,6 @@ src/
 │   │   ├── komisi/            # Commissions CRUD
 │   │   ├── pengguna/          # Users CRUD (Superadmin)
 │   │   ├── reports/           # Reports
-│   │   ├── scan/              # QR Scanner
 │   │   ├── backup/            # Backup management
 │   │   └── layout.tsx         # Auth layout with Sidebar
 │   ├── api/                   # API routes
