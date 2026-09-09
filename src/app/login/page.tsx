@@ -149,7 +149,7 @@ export default function LoginPage() {
 
             <div className="flex items-center gap-3 mt-7">
               <div className="flex-1 h-[3px] bg-paper2" />
-              <span className="text-[0.6rem] font-bold text-muted uppercase tracking-[0.2em]">GKJW &copy; 2025</span>
+              <span className="text-[0.6rem] font-bold text-muted uppercase tracking-[0.2em]">GKJW Probolinggo &copy; 2025</span>
               <div className="flex-1 h-[3px] bg-paper2" />
             </div>
           </div>
