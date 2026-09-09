@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import {
-  Package,
   ArrowRightLeft,
   AlertTriangle,
   Users,
@@ -12,6 +11,7 @@ import {
   XCircle,
   Activity,
   Landmark,
+  Package,
 } from "lucide-react"
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from "chart.js"
 import { Bar, Doughnut } from "react-chartjs-2"
@@ -23,6 +23,8 @@ interface DashboardData {
   stats: {
     totalBarang: number
     barangAktif: number
+    barangNonaktif: number
+    barangBaik: number
     barangRusak: number
     barangHilang: number
     totalKomisi: number
@@ -30,6 +32,19 @@ interface DashboardData {
     totalMutasi: number
     totalPenghapusan: number
     totalPemeliharaan: number
+  }
+  distribution: {
+    byKomisi: {
+      id: string
+      namaKomisi: string
+      count: number
+    }[]
+    byKondisi: {
+      kondisi: string
+      count: number
+    }[]
+    tanpaKomisi: number
+    komisiDenganAset: number
   }
   recentBarang: {
     id: string
@@ -45,15 +60,6 @@ interface DashboardData {
     aktivitas: string
     waktu: string
     user: { namaLengkap: string } | null
-  }[]
-  barangByKomisi: {
-    id: string
-    namaKomisi: string
-    count: number
-  }[]
-  barangByKondisi: {
-    kondisi: string
-    count: number
   }[]
 }
 
@@ -98,14 +104,36 @@ export default function DashboardPage() {
   if (loading) return <LoadingState text="Memuat dashboard..." />
   if (error || !data) return <ErrorState message={error || "Data tidak tersedia"} onRetry={() => window.location.reload()} />
 
-  const { stats, recentBarang, recentActivities, barangByKomisi, barangByKondisi } = data
+  const { stats, distribution, recentBarang, recentActivities } = data
 
   const quickStats = [
+    { label: "Dipinjam", value: stats.peminjamanAktif, icon: ArrowRightLeft, color: "warn" as const },
     { label: "Mutasi", value: stats.totalMutasi, icon: TrendingUp, color: "vibe" as const },
     { label: "Penghapusan", value: stats.totalPenghapusan, icon: XCircle, color: "danger" as const },
     { label: "Pemeliharaan", value: stats.totalPemeliharaan, icon: Activity, color: "good" as const },
-    { label: "Aset Aktif", value: stats.barangAktif, icon: CheckCircle, color: "warn" as const },
   ]
+
+  const checks = [
+    {
+      label: "Aktif + Nonaktif = Total",
+      detail: `${stats.barangAktif} + ${stats.barangNonaktif} = ${stats.totalBarang}`,
+      ok: stats.barangAktif + stats.barangNonaktif === stats.totalBarang,
+    },
+    {
+      label: "Baik + Rusak + Hilang = Total",
+      detail: `${stats.barangBaik} + ${stats.barangRusak} + ${stats.barangHilang} = ${stats.totalBarang}`,
+      ok: stats.barangBaik + stats.barangRusak + stats.barangHilang === stats.totalBarang,
+    },
+    {
+      label: "Σ Aset per Komisi = Total",
+      detail: `${distribution.byKomisi.reduce((s, k) => s + k.count, 0)} + ${distribution.tanpaKomisi} tanpa komisi = ${stats.totalBarang}`,
+      ok:
+        distribution.byKomisi.reduce((s, k) => s + k.count, 0) +
+          distribution.tanpaKomisi ===
+        stats.totalBarang,
+    },
+  ]
+  const dataValid = checks.every((c) => c.ok)
 
   const chartOptions = {
     responsive: true,
@@ -136,12 +164,14 @@ export default function DashboardPage() {
     },
   }
 
+  const komisiDenganAset = distribution.byKomisi.filter((k) => k.count > 0)
+
   const barChartData = {
-    labels: barangByKomisi.map((k) => k.namaKomisi),
+    labels: komisiDenganAset.map((k) => k.namaKomisi),
     datasets: [
       {
         label: "Jumlah Aset",
-        data: barangByKomisi.map((k) => k.count),
+        data: komisiDenganAset.map((k) => k.count),
         backgroundColor: ["#2b59ff", "#23c677", "#ffc829", "#8b5cf6", "#ff4d3d", "#0cc0df", "#ff7a1a", "#16161a"],
         borderColor: "#16161a",
         borderWidth: 3,
@@ -158,11 +188,11 @@ export default function DashboardPage() {
   }
 
   const doughnutChartData = {
-    labels: barangByKondisi.map((k) => k.kondisi),
+    labels: distribution.byKondisi.map((k) => k.kondisi),
     datasets: [
       {
-        data: barangByKondisi.map((k) => k.count),
-        backgroundColor: barangByKondisi.map((k) => kondisiColorMap[k.kondisi] || "#6b6557"),
+        data: distribution.byKondisi.map((k) => k.count),
+        backgroundColor: distribution.byKondisi.map((k) => kondisiColorMap[k.kondisi] || "#6b6557"),
         borderColor: "#16161a",
         borderWidth: 3,
         hoverOffset: 12,
@@ -202,7 +232,7 @@ export default function DashboardPage() {
     },
   }
 
-  const totalKondisi = barangByKondisi.reduce((sum, k) => sum + k.count, 0)
+  const totalKondisi = distribution.byKondisi.reduce((sum, k) => sum + k.count, 0)
 
   return (
     <div>
@@ -240,7 +270,7 @@ export default function DashboardPage() {
           icon={Package}
           title="Total Aset"
           value={stats.totalBarang}
-          sub={`${stats.barangAktif} aktif`}
+          sub={`${stats.barangAktif} aktif · ${stats.barangNonaktif} nonaktif`}
           face="primary"
         />
         <StatCard
@@ -261,7 +291,7 @@ export default function DashboardPage() {
           icon={Landmark}
           title="Komisi"
           value={stats.totalKomisi}
-          sub="terdaftar"
+          sub={`${distribution.komisiDenganAset} komisi punya aset`}
           face="vibe"
         />
       </div>
@@ -288,17 +318,53 @@ export default function DashboardPage() {
         })}
       </div>
 
-      {/* Charts row */}
+      {/* Data validation banner */}
+      <Card
+        className="mb-6"
+        icon={dataValid ? CheckCircle : AlertTriangle}
+        title="Verifikasi Data"
+        sub="Seluruh angka dashboard lolos pemeriksaan konsistensi"
+        actions={
+          <span
+            className={`brut-sticker-help !px-3 !py-1 ${
+              dataValid ? "!bg-good" : "!bg-danger !text-white"
+            }`}
+          >
+            {dataValid ? "Data 100% Valid" : "Ketidaksesuaian ditemukan"}
+          </span>
+        }
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {checks.map((c) => (
+            <div
+              key={c.label}
+              className={`flex items-start gap-2.5 border-[3px] border-ink p-3.5 ${
+                c.ok ? "bg-good/15" : "bg-danger/15"
+              }`}
+            >
+              {c.ok ? (
+                <CheckCircle className="w-5 h-5 shrink-0 text-good" strokeWidth={3} />
+              ) : (
+                <XCircle className="w-5 h-5 shrink-0 text-danger" strokeWidth={3} />
+              )}
+              <div className="min-w-0">
+                <p className="text-[0.7rem] font-bold uppercase tracking-wide">{c.label}</p>
+                <p className="text-xs font-mono font-bold text-muted mt-0.5">{c.detail}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6 mb-3 sm:mb-6">
         <Card
           title="Aset per Komisi"
-          sub="Distribusi aset berdasarkan komisi"
+          sub={`${komisiDenganAset.length} dari ${distribution.byKomisi.length} komisi punya aset${distribution.tanpaKomisi > 0 ? ` · ${distribution.tanpaKomisi} tanpa komisi` : ""}`}
           icon={Package}
           className="lg:col-span-2"
-          actions={<span className="brut-sticker-help !px-3 !py-1 !text-[0.62rem]">{barangByKomisi.length} Komisi</span>}
+          actions={<span className="brut-sticker-help !px-3 !py-1 !text-[0.62rem]">{stats.totalBarang} Aset</span>}
         >
           <div className="h-72">
-            {barangByKomisi.length > 0 ? (
+            {komisiDenganAset.length > 0 ? (
               <Bar data={barChartData} options={chartOptions} />
             ) : (
               <EmptyState text="Belum ada data komisi" icon={Landmark} />
@@ -308,14 +374,14 @@ export default function DashboardPage() {
 
         <Card title="Aset per Kondisi" sub="Status kondisi seluruh aset" icon={Activity}>
           <div className="h-64">
-            {barangByKondisi.length > 0 ? (
+            {distribution.byKondisi.length > 0 ? (
               <Doughnut data={doughnutChartData} options={doughnutOptions} />
             ) : (
               <EmptyState text="Belum ada data kondisi" icon={Activity} />
             )}
           </div>
           <div className="mt-3 flex justify-center gap-3 flex-wrap">
-            {barangByKondisi.map((k) => (
+            {distribution.byKondisi.map((k) => (
               <span key={k.kondisi} className="flex items-center gap-1.5 text-xs font-bold text-muted uppercase">
                 <span
                   className="w-3 h-3 border-2 border-ink"

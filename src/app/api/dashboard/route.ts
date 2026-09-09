@@ -9,27 +9,46 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const [
-      totalBarang,
-      barangAktif,
-      barangRusak,
-      barangHilang,
-      totalKomisi,
-      peminjamanAktif,
-      totalMutasi,
-      totalPenghapusan,
-      totalPemeliharaan,
-    ] = await Promise.all([
-      prisma.barang.count(),
-      prisma.barang.count({ where: { status: "Aktif" } }),
-      prisma.barang.count({ where: { kondisi: "Rusak" } }),
-      prisma.barang.count({ where: { kondisi: "Hilang" } }),
-      prisma.komisi.count(),
-      prisma.peminjaman.count({ where: { status: "Dipinjam" } }),
-      prisma.mutasi.count(),
-      prisma.penghapusan.count(),
-      prisma.pemeliharaan.count(),
-    ])
+    // Satu snapshot barang utuh → semua angka ditarik dari snapshot yang sama
+    // sehingga otomatis selalu konsisten (barangAktif + barangNonaktif = total, dsb.)
+    const [allBarang, allKomisi, peminjamanAktif, totalMutasi, totalPenghapusan, totalPemeliharaan] =
+      await Promise.all([
+        prisma.barang.findMany({
+          select: { komisiId: true, kondisi: true, status: true },
+        }),
+        prisma.komisi.findMany({
+          select: { id: true, namaKomisi: true },
+          orderBy: { namaKomisi: "asc" },
+        }),
+        prisma.peminjaman.count({ where: { status: "Dipinjam" } }),
+        prisma.mutasi.count(),
+        prisma.penghapusan.count(),
+        prisma.pemeliharaan.count(),
+      ])
+
+    const totalBarang = allBarang.length
+    const barangAktif = allBarang.filter((b) => b.status === "Aktif").length
+    const barangNonaktif = totalBarang - barangAktif
+
+    const kondisiCounts: Record<string, number> = { Baik: 0, Rusak: 0, Hilang: 0 }
+    for (const b of allBarang) {
+      kondisiCounts[b.kondisi || "Lainnya"] = (kondisiCounts[b.kondisi || "Lainnya"] || 0) + 1
+    }
+    const barangBaik = kondisiCounts["Baik"] || 0
+    const barangRusak = kondisiCounts["Rusak"] || 0
+    const barangHilang = kondisiCounts["Hilang"] || 0
+    const barangLain = totalBarang - barangBaik - barangRusak - barangHilang
+
+    const komisiIds = new Set(allKomisi.map((k) => k.id))
+    const perKomisi: Record<string, number> = {}
+    let tanpaKomisi = 0
+    for (const b of allBarang) {
+      if (b.komisiId && komisiIds.has(b.komisiId)) {
+        perKomisi[b.komisiId] = (perKomisi[b.komisiId] || 0) + 1
+      } else {
+        tanpaKomisi += 1
+      }
+    }
 
     const recentBarang = await prisma.barang.findMany({
       take: 5,
@@ -43,42 +62,41 @@ export async function GET() {
       include: { user: { select: { namaLengkap: true } } },
     })
 
-    const barangByKomisi = await prisma.komisi.findMany({
-      select: {
-        id: true,
-        namaKomisi: true,
-        _count: { select: { barang: true } },
-      },
-    })
+    const byKomisi = allKomisi.map((k) => ({
+      id: k.id,
+      namaKomisi: k.namaKomisi,
+      count: perKomisi[k.id] || 0,
+    }))
 
-    const barangByKondisi = await prisma.barang.groupBy({
-      by: ["kondisi"],
-      _count: { id: true },
-    })
+    const byKondisi = [
+      { kondisi: "Baik", count: barangBaik },
+      { kondisi: "Rusak", count: barangRusak },
+      { kondisi: "Hilang", count: barangHilang },
+      ...(barangLain > 0 ? [{ kondisi: "Lainnya", count: barangLain }] : []),
+    ]
 
     return NextResponse.json({
       stats: {
         totalBarang,
         barangAktif,
+        barangNonaktif,
+        barangBaik,
         barangRusak,
         barangHilang,
-        totalKomisi,
+        totalKomisi: allKomisi.length,
         peminjamanAktif,
         totalMutasi,
         totalPenghapusan,
         totalPemeliharaan,
       },
+      distribution: {
+        byKomisi,
+        byKondisi,
+        tanpaKomisi,
+        komisiDenganAset: byKomisi.filter((k) => k.count > 0).length,
+      },
       recentBarang,
       recentActivities,
-      barangByKomisi: barangByKomisi.map((k) => ({
-        id: k.id,
-        namaKomisi: k.namaKomisi,
-        count: k._count.barang,
-      })),
-      barangByKondisi: barangByKondisi.map((k) => ({
-        kondisi: k.kondisi,
-        count: k._count.id,
-      })),
     })
   } catch (error) {
     console.error("Dashboard error:", error)
