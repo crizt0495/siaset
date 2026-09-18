@@ -1,74 +1,111 @@
 "use client"
 
-import { useState } from "react"
-import { Database, Download, Trash2, RefreshCw, CheckCircle, AlertCircle, HardDrive } from "lucide-react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import {
+  Database, Download, Trash2, Upload, RefreshCw, CheckCircle, AlertCircle, HardDrive, FileUp, Server,
+} from "lucide-react"
 import {
   PageHeader, Label, Card, StatCard, Table, TH, TD, Tr,
-  Button, IconButton, ConfirmModal, EmptyState,
+  Button, IconButton, ConfirmModal, EmptyState, LoadingState,
 } from "@/components/ui"
 
 interface BackupFile {
   id: string
   filename: string
   size: string
+  sizeBytes: number
   createdAt: string
-  status: "success" | "pending" | "failed"
+  status: "success"
 }
 
-const initialBackups: BackupFile[] = [
-  { id: "1", filename: "backup_2026-08-25_03-00.sql", size: "2.4 MB", createdAt: "2026-08-25 03:00:00", status: "success" },
-  { id: "2", filename: "backup_2026-08-24_03-00.sql", size: "2.3 MB", createdAt: "2026-08-24 03:00:00", status: "success" },
-  { id: "3", filename: "backup_2026-08-23_03-00.sql", size: "2.2 MB", createdAt: "2026-08-23 03:00:00", status: "success" },
-]
+function formatBytes(bytes: number): string {
+  if (!bytes) return "0 B"
+  const units = ["B", "KB", "MB", "GB"]
+  const i = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)))
+  const val = bytes / Math.pow(1024, i)
+  return `${val.toFixed(i === 0 || val >= 10 ? 0 : 1)} ${units[i]}`
+}
 
 export default function BackupPage() {
-  const [backups, setBackups] = useState<BackupFile[]>(initialBackups)
+  const [backups, setBackups] = useState<BackupFile[]>([])
+  const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [restoreFile, setRestoreFile] = useState<File | null>(null)
+  const [confirmRestore, setConfirmRestore] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const fetchBackups = useCallback(async () => {
+    try {
+      const res = await fetch("/api/backup")
+      if (!res.ok) throw new Error("Gagal memuat daftar backup")
+      const json = await res.json()
+      setBackups(json.data || [])
+    } catch (err: any) {
+      setMessage({ type: "error", text: err.message || "Gagal memuat daftar backup" })
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchBackups()
+  }, [fetchBackups])
 
   const handleCreateBackup = async () => {
     setCreating(true)
     setMessage(null)
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    const now = new Date()
-    const dateStr = now.toISOString().slice(0, 10)
-    const timeStr = now.toTimeString().slice(0, 5).replace(":", "-")
-    const newBackup: BackupFile = {
-      id: Date.now().toString(),
-      filename: `backup_${dateStr}_${timeStr}.sql`,
-      size: "2.5 MB",
-      createdAt: now.toISOString().replace("T", " ").slice(0, 19),
-      status: "success",
+    try {
+      const res = await fetch("/api/backup", { method: "POST" })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Gagal membuat backup")
+      setBackups(prev => [json, ...prev.filter(b => b.id !== json.id)])
+      setMessage({ type: "success", text: `Backup berhasil dibuat: ${json.filename}` })
+    } catch (err: any) {
+      setMessage({ type: "error", text: err.message || "Gagal membuat backup" })
+    } finally {
+      setCreating(false)
     }
-    setBackups(prev => [newBackup, ...prev])
-    setMessage({ type: "success", text: "Backup berhasil dibuat! (Simulasi)" })
-    setCreating(false)
   }
 
   const handleDeleteBackup = async (id: string) => {
-    setBackups(prev => prev.filter(b => b.id !== id))
     setDeleteId(null)
-  }
-
-  const handleDownload = (backup: BackupFile) => {
-    const content = `-- Backup Database SIASET\n-- File: ${backup.filename}\n-- Dibuat: ${backup.createdAt}\n-- Status: ${backup.status}\n-- Catatan: File ini adalah simulasi backup\n\n-- Struktur database...\n-- Data...\n\n-- Selesai`
-    const blob = new Blob([content], { type: "text/sql" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = backup.filename
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  const statusBadge = (status: string) => {
-    const color: Record<string, string> = {
-      success: "brut-badge-green", pending: "brut-badge-yellow", failed: "brut-badge-red",
+    setMessage(null)
+    try {
+      const res = await fetch(`/api/backup/${encodeURIComponent(id)}`, { method: "DELETE" })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Gagal menghapus backup")
+      setBackups(prev => prev.filter(b => b.id !== id))
+      setMessage({ type: "success", text: "Backup berhasil dihapus" })
+    } catch (err: any) {
+      setMessage({ type: "error", text: err.message || "Gagal menghapus backup" })
     }
-    const labels: Record<string, string> = { success: "Berhasil", pending: "Menunggu", failed: "Gagal" }
-    return <span className={`brut-badge ${color[status] || "brut-badge-gray"}`}>{labels[status] || status}</span>
   }
+
+  const handleRestoreFile = async () => {
+    setConfirmRestore(false)
+    if (!restoreFile) return
+    setMessage(null)
+    try {
+      const text = await restoreFile.text()
+      const res = await fetch("/api/backup/restore", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sql: text }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Gagal melakukan restore")
+      setMessage({ type: "success", text: "Restore berhasil. Data database telah dipulihkan." })
+    } catch (err: any) {
+      setMessage({ type: "error", text: err.message || "Gagal melakukan restore" })
+    } finally {
+      setRestoreFile(null)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    }
+  }
+
+  const totalSize = backups.reduce((sum, b) => sum + (b.sizeBytes || 0), 0)
 
   return (
     <div>
@@ -80,7 +117,7 @@ export default function BackupPage() {
       <PageHeader
         index="10"
         title="Backup Database"
-        desc="Kelola backup data aplikasi"
+        desc="Buat backup, unduh file SQL, dan pulihkan data"
         extra={<Label color="purple">10 · Backup</Label>}
       >
         <Button onClick={handleCreateBackup} disabled={creating} variant="primary">
@@ -98,8 +135,13 @@ export default function BackupPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
         <StatCard icon={Database} title="Backup Tersimpan" value={backups.length} face="primary" />
-        <StatCard icon={CheckCircle} title="Sukses" value={backups.filter(b => b.status === "success").length} face="good" />
-        <StatCard icon={HardDrive} title="Rata-rata Ukuran" value="±2.3 MB" face="warn" />
+        <StatCard icon={HardDrive} title="Total Ukuran" value={formatBytes(totalSize)} face="warn" />
+        <StatCard
+          icon={CheckCircle}
+          title="Terakhir Dibuat"
+          value={backups[0]?.createdAt || "-"}
+          face="good"
+        />
       </div>
 
       {message && (
@@ -109,14 +151,55 @@ export default function BackupPage() {
         </div>
       )}
 
+      {/* Restore */}
+      <Card
+        className="mb-8"
+        title="Restore Database"
+        sub="Pulihkan data dari file SQL backup"
+        icon={Server}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".sql,text/sql,text/plain"
+          className="hidden"
+          onChange={(e) => setRestoreFile(e.target.files?.[0] || null)}
+        />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="brut-btn flex-1 justify-start !text-left"
+            type="button"
+          >
+            <FileUp className="w-4 h-4 shrink-0" strokeWidth={3} />
+            <span className="truncate font-semibold">
+              {restoreFile ? restoreFile.name : "Pilih file SQL backup..."}
+            </span>
+          </button>
+          <Button
+            variant="danger"
+            onClick={() => setConfirmRestore(true)}
+            disabled={!restoreFile}
+          >
+            <Upload className="w-4 h-4" strokeWidth={3} /> Restore Sekarang
+          </Button>
+        </div>
+        <p className="text-xs text-muted font-medium mt-3">
+          Peringatan: proses restore akan menggantikan seluruh data di database dengan isi file backup.
+          Pastikan Anda memiliki backup terbaru sebelum melanjutkan.
+        </p>
+      </Card>
+
       <Card
         noPad
         title="Daftar Backup"
-        sub="Riwayat file backup"
+        sub="Riwayat file backup database"
         icon={Database}
         actions={<Label color="blue">{backups.length} file</Label>}
       >
-        {backups.length === 0 ? (
+        {loading ? (
+          <LoadingState text="Memuat backup..." />
+        ) : backups.length === 0 ? (
           <EmptyState icon={Database} text="Belum ada backup" />
         ) : (
           <Table
@@ -137,12 +220,16 @@ export default function BackupPage() {
                 <TD className="font-mono text-xs font-bold">{backup.filename}</TD>
                 <TD className="text-muted font-semibold">{backup.size}</TD>
                 <TD className="text-muted font-semibold">{backup.createdAt}</TD>
-                <TD>{statusBadge(backup.status)}</TD>
+                <TD><span className="brut-badge brut-badge-green">Berhasil</span></TD>
                 <TD>
                   <div className="flex items-center justify-end gap-1.5">
-                    <IconButton title="Download" variant="good" onClick={() => handleDownload(backup)}>
+                    <a
+                      href={`/api/backup/${encodeURIComponent(backup.id)}/download`}
+                      className="brut-iconbtn brut-iconbtn-good"
+                      title="Download SQL"
+                    >
                       <Download className="w-4 h-4" strokeWidth={2.75} />
-                    </IconButton>
+                    </a>
                     <IconButton title="Hapus" variant="danger" onClick={() => setDeleteId(backup.id)}>
                       <Trash2 className="w-4 h-4" strokeWidth={2.75} />
                     </IconButton>
@@ -157,9 +244,20 @@ export default function BackupPage() {
       <ConfirmModal
         open={!!deleteId}
         title="Hapus Backup?"
-        message="Backup yang dihapus tidak dapat dikembalikan."
+        message="File backup yang dihapus tidak dapat dikembalikan."
         onCancel={() => setDeleteId(null)}
         onConfirm={() => deleteId && handleDeleteBackup(deleteId)}
+      />
+
+      <ConfirmModal
+        open={confirmRestore}
+        title="Restore Database?"
+        message={restoreFile
+          ? `Data dari "${restoreFile.name}" akan menggantikan seluruh data saat ini. Proses ini tidak dapat dibatalkan.`
+          : ""}
+        label="Restore"
+        onCancel={() => setConfirmRestore(false)}
+        onConfirm={handleRestoreFile}
       />
     </div>
   )

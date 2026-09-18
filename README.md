@@ -26,7 +26,7 @@ Sistem Informasi Inventaris Aset untuk GKJW Jemaat Probolinggo. Dibangun ulang d
 - **Komisi** - Manajemen komisi/departemen
 - **Pengguna** - Manajemen user dengan RBAC (Superadmin only)
 - **Laporan** - Filter, chart, export data
-- **Backup** - UI manajemen backup (Superadmin)
+- **Backup & Restore** - Buat backup SQL, download file, dan restore database (Superadmin only)
 
 ### Roles & Permissions
 - **Superadmin** - Akses penuh (user management, backup, dll)
@@ -68,8 +68,22 @@ npm run dev
 | `DATABASE_URL` | PostgreSQL connection string (Neon) |
 | `NEXTAUTH_SECRET` | Random secret for JWT signing |
 | `NEXTAUTH_URL` | App URL (e.g. `https://your-app.vercel.app`) |
+| `BACKUP_DIR` (opsional) | Folder penyimpanan file backup SQL (default `./backups`). Di Vercel set ke `/tmp` karena filesystem read-only |
 
 Generate secret: `openssl rand -base64 32`
+
+## 💾 Backup & Restore
+
+Menu **Backup** (khusus Superadmin) di `/backup`:
+
+- **Buat Backup** - menghasilkan dump SQL (skema + data) seluruh tabel dari database aktif dan menyimpannya ke folder `BACKUP_DIR`
+- **Download SQL** - mengunduh file `.sql` untuk disimpan secara manual / dipindahkan ke server lain
+- **Restore** - memilih file `.sql` dan menjalankannya untuk memulihkan database. Seluruh proses dijalankan dalam satu transaksi (gagal di tengah akan di-rollback). **Perhatian: restore menggantikan seluruh data saat ini.**
+- **Hapus** - menghapus file backup yang tidak dibutuhkan
+
+Backup hanya dapat dibuat/diunduh/dihapus/direstore oleh pengguna dengan role **Superadmin**. Semua aktivitas backup tercatat di log Aktivitas.
+
+> Catatan Vercel: filesystem bersifat ephemeral & read-only, jadi gunakan `BACKUP_DIR=/tmp`. Backup tersimpan selama fungsi server masih hangat — selalu unduh file SQL-nya setelah membuat backup.
 
 ## 🗄️ Database Schema
 
