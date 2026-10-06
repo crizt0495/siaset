@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { Search, Eye, Pencil, Trash2, Wrench } from "lucide-react"
 import {
-  PageHeader, AddButton, Card, Table, TH, TD, Tr, Pagination,
-  ConfirmModal, Input, EmptyState, Label,
+  PageHeader, AddButton, Card, DataList, ListActions, ListIndex,
+  Pagination, ConfirmModal, Input, Label,
 } from "@/components/ui"
 
 interface Pemeliharaan {
@@ -56,51 +56,73 @@ export default function PemeliharaanList() {
       </PageHeader>
 
       <Card noPad>
-        <div className="p-4 border-b-[3px] border-ink bg-paper2">
-          <div className="relative max-w-md">
+        <div className="p-3 border-b-[3px] border-ink bg-paper2">
+          <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" strokeWidth={3} />
             <Input type="text" placeholder="Cari pemeliharaan..." value={search} className="!pl-10" onChange={e => { setSearch(e.target.value); setPage(1) }} />
           </div>
         </div>
 
-        <Table
-          head={
-            <tr>
-              <TH className="!w-12">No</TH>
-              <TH>Barang</TH>
-              <TH>Tanggal</TH>
-              <TH>Biaya</TH>
-              <TH>Petugas</TH>
-              <TH>Keterangan</TH>
-              <TH className="!text-right">Aksi</TH>
-            </tr>
-          }
-        >
-          {loading ? (
-            <Tr><TD colSpan={7} className="!py-10 text-center text-muted font-bold">Memuat data...</TD></Tr>
-          ) : data.length === 0 ? (
-            <Tr><TD colSpan={7} className="!p-0"><EmptyState icon={Wrench} text="Tidak ada data pemeliharaan" /></TD></Tr>
-          ) : data.map((p, i) => (
-            <Tr key={p.id}>
-              <TD className="font-bold text-muted">{(page - 1) * 10 + i + 1}</TD>
-              <TD>
-                <div className="font-bold">{p.barang?.namaBarang || "-"}</div>
-                <div className="font-mono text-xs text-muted">{p.barang?.kodeBarang || ""}</div>
-              </TD>
-              <TD className="text-muted font-semibold">{new Date(p.tanggal).toLocaleDateString("id-ID")}</TD>
-              <TD className="font-bold">{formatRupiah(Number(p.biaya))}</TD>
-              <TD className="text-muted font-semibold">{p.user?.namaLengkap || "-"}</TD>
-              <TD className="text-muted font-semibold truncate max-w-[200px]">{p.keterangan || "-"}</TD>
-              <TD>
-                <div className="flex items-center justify-end gap-1.5">
-                  <Link href={`/pemeliharaan/${p.id}`} className="brut-iconbtn brut-iconbtn-primary" title="Detail"><Eye className="w-4 h-4" strokeWidth={2.75} /></Link>
-                  <Link href={`/pemeliharaan/${p.id}/edit`} className="brut-iconbtn brut-iconbtn-warn" title="Edit"><Pencil className="w-4 h-4" strokeWidth={2.75} /></Link>
-                  <button onClick={() => setDeleteId(p.id)} className="brut-iconbtn brut-iconbtn-danger" title="Hapus"><Trash2 className="w-4 h-4" strokeWidth={2.75} /></button>
-                </div>
-              </TD>
-            </Tr>
-          ))}
-        </Table>
+        <DataList<Pemeliharaan>
+          rows={data}
+          getKey={(p) => p.id}
+          page={page}
+          perPage={10}
+          loading={loading}
+          emptyIcon={Wrench}
+          emptyText="Tidak ada data pemeliharaan"
+          columns={[
+            {
+              header: "No",
+              render: (_p, i) => <ListIndex value={i + 1} />,
+              className: "!w-12 font-bold text-muted",
+              headClassName: "!w-12",
+            },
+            {
+              header: "Barang",
+              render: (p) => (
+                <>
+                  <div className="font-bold">{p.barang?.namaBarang || "-"}</div>
+                  <div className="font-mono text-xs text-muted">{p.barang?.kodeBarang || ""}</div>
+                </>
+              ),
+              slot: "title",
+            },
+            {
+              header: "Biaya",
+              render: (p) => <span className="font-bold break-words">{formatRupiah(Number(p.biaya))}</span>,
+              slot: "subtitle",
+            },
+            {
+              header: "Tanggal",
+              render: (p) => (
+                <span className="text-muted font-semibold">{new Date(p.tanggal).toLocaleDateString("id-ID")}</span>
+              ),
+            },
+            {
+              header: "Petugas",
+              render: (p) => <span className="text-muted font-semibold">{p.user?.namaLengkap || "-"}</span>,
+            },
+            {
+              header: "Keterangan",
+              render: (p) => <span className="text-muted font-semibold break-words">{p.keterangan || "-"}</span>,
+              className: "text-muted font-semibold truncate max-w-[200px]",
+            },
+            {
+              header: "Aksi",
+              render: (p) => (
+                <ListActions>
+                  <Link href={`/pemeliharaan/${p.id}`} className="brut-iconbtn brut-iconbtn-primary" title="Detail" aria-label="Detail"><Eye className="w-4 h-4" strokeWidth={2.75} /></Link>
+                  <Link href={`/pemeliharaan/${p.id}/edit`} className="brut-iconbtn brut-iconbtn-warn" title="Edit" aria-label="Edit"><Pencil className="w-4 h-4" strokeWidth={2.75} /></Link>
+                  <button onClick={() => setDeleteId(p.id)} className="brut-iconbtn brut-iconbtn-danger" title="Hapus" aria-label="Hapus"><Trash2 className="w-4 h-4" strokeWidth={2.75} /></button>
+                </ListActions>
+              ),
+              slot: "actions",
+              className: "!text-right",
+              headClassName: "!text-right",
+            },
+          ]}
+        />
 
         <Pagination page={page} totalPages={totalPages} setPage={setPage} />
       </Card>

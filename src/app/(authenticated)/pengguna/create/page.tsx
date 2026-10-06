@@ -57,9 +57,9 @@ export default function PenggunaCreate() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5 sm:mb-6">
         <BackLink href="/pengguna" />
-        <span className="text-sm font-bold text-muted uppercase tracking-wider">Pengguna</span>
+        <span className="text-[0.7rem] sm:text-sm font-bold text-muted uppercase tracking-wider">Pengguna</span>
       </div>
 
       <PageHeader
@@ -84,7 +84,7 @@ export default function PenggunaCreate() {
             </>
           }
         >
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
             <Field label="Nama Lengkap" required>
               <Input type="text" required value={form.namaLengkap} onChange={set("namaLengkap")} placeholder="Nama lengkap pengguna" />
             </Field>

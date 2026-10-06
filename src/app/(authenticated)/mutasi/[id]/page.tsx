@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { MapPin, ArrowDown, Package, Calendar } from "lucide-react"
 import {
   PageHeader, BackLink, LoadingState, EmptyState, Card, Label,
-  ButtonLink, Button, ConfirmModal,
+  ButtonLink, Button, ConfirmModal, DetailRow as Row,
 } from "@/components/ui"
 
 interface MutasiDetail {
@@ -27,15 +27,6 @@ interface MutasiDetail {
     id: string
     namaLengkap: string
   } | null
-}
-
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-2.5 border-b-2 border-ink/10 last:border-0">
-      <span className="text-xs font-bold text-muted uppercase tracking-wider shrink-0">{label}</span>
-      <span className="text-sm font-bold text-right break-words">{value}</span>
-    </div>
-  )
 }
 
 export default function MutasiDetailPage() {
@@ -89,9 +80,9 @@ export default function MutasiDetailPage() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5 sm:mb-6">
         <BackLink href="/mutasi" />
-        <span className="text-sm font-bold text-muted uppercase tracking-wider">Mutasi</span>
+        <span className="text-[0.7rem] sm:text-sm font-bold text-muted uppercase tracking-wider">Mutasi</span>
       </div>
 
       <PageHeader
@@ -106,7 +97,7 @@ export default function MutasiDetailPage() {
         </Button>
       </PageHeader>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         <Card title="Informasi Mutasi" sub="Data mutasi" icon={Calendar} className="mb-0">
           <Row label="Barang" value={`${data.barang.namaBarang} (${data.barang.kodeBarang})`} />
           <Row label="Tanggal Mutasi" value={formatDate(data.tanggalMutasi)} />

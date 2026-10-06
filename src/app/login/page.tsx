@@ -34,7 +34,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-paper relative overflow-hidden flex items-center justify-center px-4 py-6">
+    <div className="min-h-dvh bg-paper relative overflow-hidden flex items-center justify-center px-4 py-6 safe-top safe-bottom">
       {/* Decorative background */}
       <div className="absolute inset-0 brut-stripe pointer-events-none" />
       <div className="absolute top-8 -left-16 w-56 h-56 bg-primary border-[3px] border-ink rotate-12 pointer-events-none hidden md:block" />
@@ -43,7 +43,7 @@ export default function LoginPage() {
       <div className="absolute bottom-1/4 left-10 w-16 h-16 bg-good border-[3px] border-ink rotate-12 pointer-events-none hidden lg:block" />
 
       {/* Ticker */}
-      <div className="brut-marquee fixed top-4 left-1/2 -translate-x-1/2 w-[92%] max-w-3xl z-10 !shadow-none">
+      <div className="brut-marquee fixed top-3 sm:top-4 left-1/2 -translate-x-1/2 w-[92%] max-w-3xl z-10 !shadow-none">
         <div className="brut-marquee-inner !text-[0.7rem] !py-1.5">
           {Array.from({ length: 4 }).map((_, i) => (
             <span key={i} className="flex items-center gap-3">
@@ -64,12 +64,12 @@ export default function LoginPage() {
         {/* Stacked shadow card */}
         <div className="relative">
           <div className="absolute inset-0 translate-x-3 translate-y-3 bg-ink border-[3px] border-ink" />
-          <div className="relative bg-card border-[3px] border-ink p-6 sm:p-10 rotate-[-0.6deg] sm:hover:rotate-0 transition-transform duration-200">
+          <div className="relative bg-card border-[3px] border-ink p-5 xs:p-6 sm:p-10 rotate-[-0.6deg] transition-transform duration-200">
             {/* Sticker badges */}
-            <div className="brut-sticker w-14 h-14 text-xl -rotate-6 mb-5">
-              <Boxes className="w-7 h-7" strokeWidth={3} />
+            <div className="brut-sticker w-12 h-12 sm:w-14 sm:h-14 text-lg sm:text-xl -rotate-6 mb-4 sm:mb-5">
+              <Boxes className="w-6 h-6 sm:w-7 h-7" strokeWidth={3} />
             </div>
-            <span className="brut-sticker absolute -top-4 -right-4 w-16 h-16 rounded-full text-[0.55rem] leading-tight p-2 rotate-12 text-center bg-danger">
+            <span className="brut-sticker absolute -top-4 -right-3 sm:-right-4 w-14 h-14 sm:w-16 sm:h-16 rounded-full text-[0.52rem] sm:text-[0.55rem] leading-tight p-2 rotate-12 text-center bg-danger">
               Login <br /> di sini
             </span>
 
@@ -80,15 +80,15 @@ export default function LoginPage() {
               Sistem Inventaris Aset GKJW
             </p>
 
-            <div className="w-full h-[3px] bg-warn mt-5 mb-7" />
+            <div className="w-full h-[3px] bg-warn mt-4 mb-5 sm:mt-5 sm:mb-7" />
 
             {error && (
               <div className="brut-card mb-5 bg-danger !border-3 p-3.5 !shadow-[3px_3px_0_0_var(--shadow)]">
-                <p className="text-sm font-bold text-white">{error}</p>
+                <p className="text-sm font-bold text-white break-words">{error}</p>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
               <div>
                 <label className="brut-field-label">Username</label>
                 <div className="relative">
@@ -121,8 +121,8 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted hover:text-ink transition-colors"
-                    aria-label="Tampilkan password"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 text-muted hover:text-ink transition-colors"
+                    aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" strokeWidth={2.75} /> : <Eye className="w-5 h-5" strokeWidth={2.75} />}
                   </button>
@@ -147,9 +147,11 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <div className="flex items-center gap-3 mt-7">
+            <div className="flex items-center gap-3 mt-6 sm:mt-7">
               <div className="flex-1 h-[3px] bg-paper2" />
-              <span className="text-[0.6rem] font-bold text-muted uppercase tracking-[0.2em]">GKJW Probolinggo &copy; 2025</span>
+              <span className="text-[0.58rem] sm:text-[0.6rem] font-bold text-muted uppercase tracking-[0.2em] text-center">
+                GKJW Probolinggo &copy; 2025
+              </span>
               <div className="flex-1 h-[3px] bg-paper2" />
             </div>
           </div>

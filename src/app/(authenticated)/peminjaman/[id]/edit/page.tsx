@@ -62,9 +62,9 @@ export default function PeminjamanEdit() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5 sm:mb-6">
         <BackLink href={`/peminjaman/${id}`} />
-        <span className="text-sm font-bold text-muted uppercase tracking-wider">Peminjaman</span>
+        <span className="text-[0.7rem] sm:text-sm font-bold text-muted uppercase tracking-wider">Peminjaman</span>
       </div>
 
       <PageHeader
@@ -88,8 +88,8 @@ export default function PeminjamanEdit() {
             </>
           }
         >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
+            <div className="space-y-4 sm:space-y-5">
               <Field label="Peminjam" required>
                 <Input type="text" required value={form.peminjam} onChange={set("peminjam")} />
               </Field>
@@ -103,7 +103,7 @@ export default function PeminjamanEdit() {
                 </Select>
               </Field>
             </div>
-            <div className="space-y-5">
+            <div className="space-y-4 sm:space-y-5">
               <Field label="Tanggal Kembali">
                 <Input type="date" value={form.tanggalKembali} onChange={set("tanggalKembali")} />
               </Field>

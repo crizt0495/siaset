@@ -45,9 +45,9 @@ export default function KomisiEdit() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5 sm:mb-6">
         <BackLink href={`/komisi/${params.id}`} />
-        <span className="text-sm font-bold text-muted uppercase tracking-wider">Komisi</span>
+        <span className="text-[0.7rem] sm:text-sm font-bold text-muted uppercase tracking-wider">Komisi</span>
       </div>
 
       <PageHeader
@@ -71,7 +71,7 @@ export default function KomisiEdit() {
             </>
           }
         >
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
             <Field label="Nama Komisi" required>
               <Input type="text" required value={form.namaKomisi} onChange={set("namaKomisi")} />
             </Field>

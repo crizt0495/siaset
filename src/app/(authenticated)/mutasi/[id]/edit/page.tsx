@@ -96,9 +96,9 @@ export default function MutasiEditPage() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5 sm:mb-6">
         <BackLink href={`/mutasi/${data.id}`} />
-        <span className="text-sm font-bold text-muted uppercase tracking-wider">Mutasi</span>
+        <span className="text-[0.7rem] sm:text-sm font-bold text-muted uppercase tracking-wider">Mutasi</span>
       </div>
 
       <PageHeader
@@ -135,7 +135,7 @@ export default function MutasiEditPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
             <Field label="Lokasi Tujuan" required hint="Mengubah lokasi tujuan akan memperbarui lokasi barang secara otomatis.">
               <Input type="text" required value={form.lokasiTujuan} onChange={set("lokasiTujuan")} />
             </Field>

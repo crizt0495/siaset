@@ -5,7 +5,7 @@ import { useParams } from "next/navigation"
 import { Package, History } from "lucide-react"
 import {
   PageHeader, BackLink, LoadingState, EmptyState, Card, Label,
-  Badge, ButtonLink,
+  Badge, ButtonLink, DetailRow as Row,
 } from "@/components/ui"
 
 const kondisiColor: Record<string, "green" | "red" | "yellow" | "default"> = {
@@ -13,15 +13,6 @@ const kondisiColor: Record<string, "green" | "red" | "yellow" | "default"> = {
 }
 const statusColor: Record<string, "blue" | "yellow" | "default"> = {
   Aktif: "blue", Nonaktif: "yellow",
-}
-
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-2.5 border-b-2 border-ink/10 last:border-0">
-      <span className="text-xs font-bold text-muted uppercase tracking-wider shrink-0">{label}</span>
-      <span className="text-sm font-bold text-right break-words">{value}</span>
-    </div>
-  )
 }
 
 export default function BarangDetail() {
@@ -40,9 +31,9 @@ export default function BarangDetail() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5 sm:mb-6">
         <BackLink href="/barang" />
-        <span className="text-sm font-bold text-muted uppercase tracking-wider">Barang & Aset</span>
+        <span className="text-[0.7rem] sm:text-sm font-bold text-muted uppercase tracking-wider">Barang & Aset</span>
       </div>
 
       <PageHeader
@@ -51,16 +42,16 @@ export default function BarangDetail() {
         desc={`${data.kodeBarang || ""} · ${data.komisi?.namaKomisi || "-"}`}
         extra={<Label color="blue">02 · Manajemen Aset</Label>}
       >
-        <ButtonLink href={`/barang/${data.id}/edit`} variant="warn">Edit</ButtonLink>
+        <ButtonLink href={`/barang/${data.id}/edit`} variant="warn" className="w-full sm:w-auto">Edit</ButtonLink>
       </PageHeader>
 
       <Card
         title="Informasi Barang"
         sub="Data pokok aset"
         icon={Package}
-        className="mb-6"
+        className="mb-4 sm:mb-6"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
           <div>
             <Row label="Kode Barang" value={<span className="font-mono">{data.kodeBarang}</span>} />
             <Row label="Nama Barang" value={data.namaBarang} />
@@ -79,7 +70,7 @@ export default function BarangDetail() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <Card
           title="Riwayat Peminjaman"
           sub={data.peminjaman?.length > 0 ? `${data.peminjaman.length} catatan` : "Belum ada"}

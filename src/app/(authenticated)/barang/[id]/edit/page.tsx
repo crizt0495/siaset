@@ -72,9 +72,9 @@ export default function BarangEdit() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5 sm:mb-6">
         <BackLink href={`/barang/${params.id}`} />
-        <span className="text-sm font-bold text-muted uppercase tracking-wider">Barang & Aset</span>
+        <span className="text-[0.7rem] sm:text-sm font-bold text-muted uppercase tracking-wider">Barang & Aset</span>
       </div>
 
       <PageHeader
@@ -98,8 +98,8 @@ export default function BarangEdit() {
             </>
           }
         >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
+            <div className="space-y-4 sm:space-y-5">
               <Field label="Nama Barang" required>
                 <Input type="text" required value={form.namaBarang} onChange={set("namaBarang")} />
               </Field>
@@ -119,7 +119,7 @@ export default function BarangEdit() {
                 <Input type="text" value={form.sumberPerolehan} onChange={set("sumberPerolehan")} />
               </Field>
             </div>
-            <div className="space-y-5">
+            <div className="space-y-4 sm:space-y-5">
               <Field label="Spesifikasi">
                 <Textarea rows={3} value={form.spesifikasi} onChange={set("spesifikasi")} />
               </Field>

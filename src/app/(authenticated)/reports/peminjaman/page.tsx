@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from "react"
 import { Users, BookOpen, RotateCcw } from "lucide-react"
 import {
-  PageHeader, BackLink, Badge, Card, StatCard, Table,
-  TH, TD, Tr, Pagination, EmptyState,
+  PageHeader, BackLink, Badge, Card, StatCard, DataList,
+  ListIndex, Pagination,
 } from "@/components/ui"
 
 interface Peminjaman {
@@ -41,9 +41,9 @@ export default function LaporanPeminjaman() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5 sm:mb-6">
         <BackLink href="/reports" />
-        <span className="text-sm font-bold text-muted uppercase tracking-wider">Laporan</span>
+        <span className="text-[0.7rem] sm:text-sm font-bold text-muted uppercase tracking-wider">Laporan</span>
       </div>
 
       <PageHeader
@@ -52,42 +52,58 @@ export default function LaporanPeminjaman() {
         desc="Riwayat peminjaman aset"
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+      <div className="grid grid-cols-1 xs:grid-cols-3 gap-3 sm:gap-5 mb-6 sm:mb-8">
         <StatCard icon={Users} title="Total Peminjaman" value={stats.total} face="primary" />
         <StatCard icon={BookOpen} title="Dipinjam" value={stats.dipinjam} face="warn" />
         <StatCard icon={RotateCcw} title="Dikembalikan" value={stats.dikembalikan} face="good" />
       </div>
 
       <Card noPad>
-        <Table
-          head={
-            <tr>
-              <TH className="!w-12">No</TH>
-              <TH>Barang</TH>
-              <TH>Peminjam</TH>
-              <TH className="!text-center">Jumlah</TH>
-              <TH>Tgl Pinjam</TH>
-              <TH>Tgl Kembali</TH>
-              <TH>Status</TH>
-            </tr>
-          }
-        >
-          {loading ? (
-            <Tr><TD colSpan={7} className="!py-10 text-center text-muted font-bold">Memuat data...</TD></Tr>
-          ) : data.length === 0 ? (
-            <Tr><TD colSpan={7} className="!p-0"><EmptyState icon={Users} text="Tidak ada data" /></TD></Tr>
-          ) : data.map((p, i) => (
-            <Tr key={p.id}>
-              <TD className="font-bold text-muted">{(page - 1) * 10 + i + 1}</TD>
-              <TD className="font-bold">{p.barang?.namaBarang || "-"}</TD>
-              <TD className="text-muted font-semibold">{p.peminjam || "-"}</TD>
-              <TD className="!text-center brut-num">{p.jumlahDipinjam}</TD>
-              <TD className="text-muted font-semibold">{formatDate(p.tanggalPinjam)}</TD>
-              <TD className="text-muted font-semibold">{formatDate(p.tanggalKembali)}</TD>
-              <TD><Badge color={p.status === "Dipinjam" ? "yellow" : "green"}>{p.status}</Badge></TD>
-            </Tr>
-          ))}
-        </Table>
+        <DataList<Peminjaman>
+          rows={data}
+          getKey={(p) => p.id}
+          page={page}
+          perPage={10}
+          loading={loading}
+          emptyIcon={Users}
+          emptyText="Tidak ada data"
+          columns={[
+            {
+              header: "No",
+              render: (_p, i) => <ListIndex value={i + 1} />,
+              className: "!w-12 font-bold text-muted",
+              headClassName: "!w-12",
+            },
+            {
+              header: "Barang",
+              render: (p) => p.barang?.namaBarang || "-",
+              slot: "title",
+            },
+            {
+              header: "Peminjam",
+              render: (p) => <span className="text-muted font-semibold">{p.peminjam || "-"}</span>,
+            },
+            {
+              header: "Status",
+              render: (p) => <Badge color={p.status === "Dipinjam" ? "yellow" : "green"}>{p.status}</Badge>,
+              slot: "chip",
+            },
+            {
+              header: "Jumlah",
+              render: (p) => <span className="brut-num">{p.jumlahDipinjam}</span>,
+              className: "!text-center",
+              headClassName: "!text-center",
+            },
+            {
+              header: "Tgl Pinjam",
+              render: (p) => <span className="text-muted font-semibold">{formatDate(p.tanggalPinjam)}</span>,
+            },
+            {
+              header: "Tgl Kembali",
+              render: (p) => <span className="text-muted font-semibold">{formatDate(p.tanggalKembali)}</span>,
+            },
+          ]}
+        />
 
         <Pagination page={page} totalPages={totalPages} setPage={setPage} />
       </Card>

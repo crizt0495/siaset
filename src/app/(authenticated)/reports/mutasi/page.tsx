@@ -1,10 +1,9 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { ArrowRightLeft, Repeat } from "lucide-react"
+import { Repeat } from "lucide-react"
 import {
-  PageHeader, BackLink, Card, Table, TH, TD, Tr,
-  Pagination, EmptyState,
+  PageHeader, BackLink, Card, DataList, ListIndex, Pagination,
 } from "@/components/ui"
 
 interface Mutasi {
@@ -34,9 +33,9 @@ export default function LaporanMutasi() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5 sm:mb-6">
         <BackLink href="/reports" />
-        <span className="text-sm font-bold text-muted uppercase tracking-wider">Laporan</span>
+        <span className="text-[0.7rem] sm:text-sm font-bold text-muted uppercase tracking-wider">Laporan</span>
       </div>
 
       <PageHeader
@@ -46,35 +45,44 @@ export default function LaporanMutasi() {
       />
 
       <Card noPad>
-        <Table
-          head={
-            <tr>
-              <TH className="!w-12">No</TH>
-              <TH>Barang</TH>
-              <TH>Lokasi Asal</TH>
-              <TH className="!w-10"></TH>
-              <TH>Lokasi Tujuan</TH>
-              <TH>Tanggal</TH>
-              <TH>Keterangan</TH>
-            </tr>
-          }
-        >
-          {loading ? (
-            <Tr><TD colSpan={7} className="!py-10 text-center text-muted font-bold">Memuat data...</TD></Tr>
-          ) : data.length === 0 ? (
-            <Tr><TD colSpan={7} className="!p-0"><EmptyState icon={Repeat} text="Tidak ada data" /></TD></Tr>
-          ) : data.map((m, i) => (
-            <Tr key={m.id}>
-              <TD className="font-bold text-muted">{(page - 1) * 10 + i + 1}</TD>
-              <TD className="font-bold">{m.barang?.namaBarang || "-"}</TD>
-              <TD className="text-muted font-semibold">{m.lokasiAsal}</TD>
-              <TD><ArrowRightLeft className="w-4 h-4 text-primary" strokeWidth={3} /></TD>
-              <TD className="font-bold">{m.lokasiTujuan}</TD>
-              <TD className="text-muted font-semibold">{formatDate(m.tanggalMutasi)}</TD>
-              <TD className="text-muted font-semibold">{m.keterangan || "-"}</TD>
-            </Tr>
-          ))}
-        </Table>
+        <DataList<Mutasi>
+          rows={data}
+          getKey={(m) => m.id}
+          page={page}
+          perPage={10}
+          loading={loading}
+          emptyIcon={Repeat}
+          emptyText="Tidak ada data"
+          columns={[
+            {
+              header: "No",
+              render: (_m, i) => <ListIndex value={i + 1} />,
+              className: "!w-12 font-bold text-muted",
+              headClassName: "!w-12",
+            },
+            {
+              header: "Barang",
+              render: (m) => m.barang?.namaBarang || "-",
+              slot: "title",
+            },
+            {
+              header: "Lokasi Asal",
+              render: (m) => <span className="text-muted font-semibold">{m.lokasiAsal}</span>,
+            },
+            {
+              header: "Lokasi Tujuan",
+              render: (m) => <span className="font-bold">{m.lokasiTujuan}</span>,
+            },
+            {
+              header: "Tanggal",
+              render: (m) => <span className="text-muted font-semibold">{formatDate(m.tanggalMutasi)}</span>,
+            },
+            {
+              header: "Keterangan",
+              render: (m) => <span className="text-muted font-semibold break-words">{m.keterangan || "-"}</span>,
+            },
+          ]}
+        />
 
         <Pagination page={page} totalPages={totalPages} setPage={setPage} />
       </Card>

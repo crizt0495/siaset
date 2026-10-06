@@ -5,17 +5,8 @@ import { useParams } from "next/navigation"
 import { User } from "lucide-react"
 import {
   PageHeader, BackLink, LoadingState, EmptyState, Card, Label,
-  ButtonLink,
+  ButtonLink, DetailRow as Row,
 } from "@/components/ui"
-
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-2.5 border-b-2 border-ink/10 last:border-0">
-      <span className="text-xs font-bold text-muted uppercase tracking-wider shrink-0">{label}</span>
-      <span className="text-sm font-bold text-right break-words">{value}</span>
-    </div>
-  )
-}
 
 export default function PenggunaDetail() {
   const params = useParams()
@@ -35,9 +26,9 @@ export default function PenggunaDetail() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5 sm:mb-6">
         <BackLink href="/pengguna" />
-        <span className="text-sm font-bold text-muted uppercase tracking-wider">Pengguna</span>
+        <span className="text-[0.7rem] sm:text-sm font-bold text-muted uppercase tracking-wider">Pengguna</span>
       </div>
 
       <PageHeader

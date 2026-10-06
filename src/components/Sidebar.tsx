@@ -103,7 +103,7 @@ function SidebarNav({ collapsed, isSuperadmin, isActive, onNavigate, onToggleCol
         )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-4">
+      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-4 overscroll-contain">
         {menuItems.map((item, idx) => {
           if ("href" in item && "icon" in item) {
             const Icon = item.icon
@@ -246,8 +246,9 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      {/* Desktop sidebar (md and up) */}
       <aside
-        className={`no-print hidden lg:block fixed left-0 top-0 h-full bg-paper border-r-[3px] border-ink z-30 transition-all duration-200 ${
+        className={`no-print hidden md:block fixed left-0 top-0 h-full bg-paper border-r-[3px] border-ink z-30 transition-all duration-200 ${
           collapsed ? "w-[4.5rem]" : "w-[16.5rem]"
         }`}
       >
@@ -260,19 +261,19 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
         />
       </aside>
 
-      {/* Top app bar */}
+      {/* Top app bar (all sizes) */}
       <header
-        className={`no-print fixed top-0 left-0 right-0 z-30 h-14 lg:h-16 bg-paper/90 backdrop-blur-md border-b-[3px] border-ink flex items-center justify-between px-3 lg:px-4 transition-all duration-200 ${
-          collapsed ? "lg:left-[4.5rem]" : "lg:left-[16.5rem]"
+        className={`no-print fixed top-0 left-0 right-0 z-30 h-14 md:h-16 bg-paper/90 backdrop-blur-md border-b-[3px] border-ink flex items-center justify-between pl-3 pr-3 md:px-4 safe-top transition-all duration-200 ${
+          collapsed ? "md:left-[4.5rem]" : "md:left-[16.5rem]"
         }`}
       >
         <div className="flex items-center gap-2.5 min-w-0">
-          <span className="lg:hidden w-9 h-9 brut-sticker text-[0.55rem] -rotate-3 shrink-0">
+          <span className="md:hidden w-9 h-9 brut-sticker text-[0.55rem] -rotate-3 shrink-0">
             <Boxes className="w-5 h-5" strokeWidth={3} />
           </span>
           <div className="min-w-0">
-            <p className="brut-title text-base lg:text-lg leading-none truncate">{pageTitle}</p>
-            <p className="hidden lg:block text-[0.6rem] font-bold text-muted uppercase tracking-[0.2em] mt-1">
+            <p className="brut-title text-base md:text-lg leading-none truncate">{pageTitle}</p>
+            <p className="hidden md:block text-[0.6rem] font-bold text-muted uppercase tracking-[0.2em] mt-1">
               SiAset · GKJW Probolinggo
             </p>
           </div>
@@ -291,38 +292,41 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
             <div className="w-9 h-9 bg-warn border-[3px] border-ink grid place-items-center text-ink font-display text-sm rotate-[-4deg]">
               {(sessionUser?.namaLengkap as string)?.[0]?.toUpperCase() || "U"}
             </div>
-            <div className="hidden lg:block">
-              <p className="text-sm font-bold text-ink leading-tight">
+            <div className="hidden md:block">
+              <p className="text-sm font-bold text-ink leading-tight truncate max-w-[10rem]">
                 {(sessionUser?.namaLengkap as string) || "User"}
               </p>
-              <p className="text-[0.68rem] font-bold text-muted uppercase tracking-wider">
+              <p className="text-[0.68rem] font-bold text-muted uppercase tracking-wider truncate max-w-[10rem]">
                 {(sessionUser?.komisiNama as string) || userRoles[0] || ""}
               </p>
             </div>
           </div>
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="brut-btn !px-3.5 !py-2 !text-xs"
+            className="brut-iconbtn md:brut-btn !px-3 md:!px-3.5 md:!py-2 !text-xs"
             title="Keluar"
+            aria-label="Keluar"
           >
             <LogOut className="w-4 h-4" strokeWidth={3} />
-            <span className="hidden lg:inline">Keluar</span>
+            <span className="hidden md:inline">Keluar</span>
           </button>
         </div>
       </header>
 
       {/* Main content */}
       <main
-        className={`pt-16 lg:pt-20 min-h-dvh bg-paper transition-all duration-200 ${
-          collapsed ? "lg:ml-[4.5rem]" : "lg:ml-[16.5rem]"
+        className={`pt-[calc(3.5rem+env(safe-area-inset-top))] md:pt-20 min-h-dvh bg-paper transition-all duration-200 ${
+          collapsed ? "md:ml-[4.5rem]" : "md:ml-[16.5rem]"
         }`}
       >
-        <div className="px-4 py-5 lg:p-8 pb-32 lg:pb-10 max-w-[1600px]">{children}</div>
+        <div className="px-3 xs:px-4 py-4 sm:py-5 md:p-8 pb-28 md:pb-10 max-w-[1600px]">
+          {children}
+        </div>
       </main>
 
-      {/* Bottom navigation (Android) */}
-      <nav className="no-print lg:hidden fixed bottom-0 inset-x-0 z-40 bg-card border-t-[3px] border-ink safe-bottom">
-        <div className="grid grid-cols-5 h-16">
+      {/* Bottom navigation — mobile and tablet portrait */}
+      <nav className="no-print md:hidden fixed bottom-0 inset-x-0 z-40 bg-card border-t-[3px] border-ink safe-bottom">
+        <div className="grid grid-cols-5 h-[3.75rem]">
           {tabs.map((tab) => {
             const Icon = tab.icon
             const active = tab.href ? isActive(tab.href) : sheetOpen
@@ -359,7 +363,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
 
       {/* Bottom sheet menu */}
       {sheetOpen && (
-        <div className="lg:hidden fixed inset-0 z-50">
+        <div className="md:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-ink/80 brut-stripe" onClick={() => setSheetOpen(false)} />
           <div className="absolute bottom-0 inset-x-0 brut-sheet bg-paper rounded-t-2xl border-t-[3px] border-ink safe-bottom max-h-[85dvh] overflow-y-auto">
             <div className="relative flex items-center justify-center pt-3">
@@ -373,9 +377,9 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
               </button>
             </div>
 
-            <p className="px-6 pt-4 pb-2 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Menu</p>
+            <p className="px-5 pt-4 pb-2 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">Menu</p>
 
-            <div className="grid grid-cols-3 gap-3 px-6 pb-6 pt-2">
+            <div className="grid grid-cols-3 gap-2.5 px-5 pb-5 pt-2">
               {visibleSheetItems.map((item) => {
                 const Icon = item.icon
                 const active = isActive(item.href)
@@ -384,25 +388,25 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                     key={item.href}
                     href={item.href}
                     onClick={() => setSheetOpen(false)}
-                    className={`flex flex-col items-center gap-2 border-[3px] border-ink p-3 text-center transition-transform active:translate-x-0.5 active:translate-y-0.5 ${
+                    className={`flex flex-col items-center gap-1.5 border-[3px] border-ink p-2.5 text-center transition-transform active:translate-x-0.5 active:translate-y-0.5 ${
                       active ? "bg-primary text-white" : "bg-card"
                     }`}
                   >
                     <span
-                      className={`w-10 h-10 grid place-items-center border-[3px] border-ink -rotate-3 ${
+                      className={`w-9 h-9 grid place-items-center border-[3px] border-ink -rotate-3 ${
                         active ? "bg-card text-primary" : "bg-warn text-ink"
                       }`}
                     >
-                      <Icon className="w-5 h-5" strokeWidth={2.75} />
+                      <Icon className="w-4.5 h-4.5" strokeWidth={2.75} />
                     </span>
-                    <span className="text-[0.6rem] font-bold uppercase leading-tight">{item.label}</span>
+                    <span className="text-[0.58rem] font-bold uppercase leading-tight">{item.label}</span>
                     <span className={`text-[0.55rem] font-bold ${active ? "text-white/70" : "text-muted"}`}>{item.tag}</span>
                   </Link>
                 )
               })}
             </div>
 
-            <div className="grid grid-cols-2 gap-3 border-t-[3px] border-ink px-6 py-5">
+            <div className="grid grid-cols-2 gap-2.5 border-t-[3px] border-ink px-5 py-4">
               <button onClick={() => setDarkMode(!darkMode)} className="brut-btn brut-btn-warn w-full !py-3">
                 {darkMode ? <Sun className="w-4 h-4" strokeWidth={3} /> : <Moon className="w-4 h-4" strokeWidth={3} />}
                 Tema

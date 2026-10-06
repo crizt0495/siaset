@@ -3,8 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { Trash2 } from "lucide-react"
 import {
-  PageHeader, BackLink, Card, Table, TH, TD, Tr,
-  Pagination, EmptyState, LoadingState,
+  PageHeader, BackLink, Card, DataList, ListIndex, Pagination, LoadingState,
 } from "@/components/ui"
 
 interface Penghapusan {
@@ -36,9 +35,9 @@ export default function LaporanPenghapusan() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5 sm:mb-6">
         <BackLink href="/reports" />
-        <span className="text-sm font-bold text-muted uppercase tracking-wider">Laporan</span>
+        <span className="text-[0.7rem] sm:text-sm font-bold text-muted uppercase tracking-wider">Laporan</span>
       </div>
 
       <PageHeader
@@ -48,31 +47,40 @@ export default function LaporanPenghapusan() {
       />
 
       <Card noPad>
-        <Table
-          head={
-            <tr>
-              <TH className="!w-12">No</TH>
-              <TH>Barang</TH>
-              <TH>Tanggal</TH>
-              <TH>Alasan</TH>
-              <TH>Keterangan</TH>
-            </tr>
-          }
-        >
-          {loading ? (
-            <Tr><TD colSpan={5} className="!py-10 text-center text-muted font-bold">Memuat data...</TD></Tr>
-          ) : data.length === 0 ? (
-            <Tr><TD colSpan={5} className="!p-0"><EmptyState icon={Trash2} text="Tidak ada data" /></TD></Tr>
-          ) : data.map((p, i) => (
-            <Tr key={p.id}>
-              <TD className="font-bold text-muted">{(page - 1) * 10 + i + 1}</TD>
-              <TD className="font-bold">{p.barang?.namaBarang || "-"}</TD>
-              <TD className="text-muted font-semibold">{formatDate(p.tanggalPenghapusan)}</TD>
-              <TD className="text-muted font-semibold">{p.alasan}</TD>
-              <TD className="text-muted font-semibold">{p.keterangan || "-"}</TD>
-            </Tr>
-          ))}
-        </Table>
+        <DataList<Penghapusan>
+          rows={data}
+          getKey={(p) => p.id}
+          page={page}
+          perPage={10}
+          loading={loading}
+          emptyIcon={Trash2}
+          emptyText="Tidak ada data"
+          columns={[
+            {
+              header: "No",
+              render: (_p, i) => <ListIndex value={i + 1} />,
+              className: "!w-12 font-bold text-muted",
+              headClassName: "!w-12",
+            },
+            {
+              header: "Barang",
+              render: (p) => p.barang?.namaBarang || "-",
+              slot: "title",
+            },
+            {
+              header: "Tanggal",
+              render: (p) => <span className="text-muted font-semibold">{formatDate(p.tanggalPenghapusan)}</span>,
+            },
+            {
+              header: "Alasan",
+              render: (p) => <span className="text-muted font-semibold break-words">{p.alasan}</span>,
+            },
+            {
+              header: "Keterangan",
+              render: (p) => <span className="text-muted font-semibold break-words">{p.keterangan || "-"}</span>,
+            },
+          ]}
+        />
 
         <Pagination page={page} totalPages={totalPages} setPage={setPage} />
       </Card>

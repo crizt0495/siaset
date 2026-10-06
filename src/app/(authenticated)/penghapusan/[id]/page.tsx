@@ -5,17 +5,8 @@ import { useParams, useRouter } from "next/navigation"
 import { Trash2 } from "lucide-react"
 import {
   PageHeader, BackLink, LoadingState, EmptyState, Card, Label,
-  ButtonLink, Button, ConfirmModal,
+  ButtonLink, Button, ConfirmModal, DetailRow as Row,
 } from "@/components/ui"
-
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-2.5 border-b-2 border-ink/10 last:border-0">
-      <span className="text-xs font-bold text-muted uppercase tracking-wider shrink-0">{label}</span>
-      <span className="text-sm font-bold text-right break-words">{value}</span>
-    </div>
-  )
-}
 
 export default function PenghapusanDetail() {
   const params = useParams()
@@ -40,9 +31,9 @@ export default function PenghapusanDetail() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5 sm:mb-6">
         <BackLink href="/penghapusan" />
-        <span className="text-sm font-bold text-muted uppercase tracking-wider">Penghapusan</span>
+        <span className="text-[0.7rem] sm:text-sm font-bold text-muted uppercase tracking-wider">Penghapusan</span>
       </div>
 
       <PageHeader
@@ -55,7 +46,7 @@ export default function PenghapusanDetail() {
         <Button variant="danger" onClick={() => setShowDelete(true)}>Hapus</Button>
       </PageHeader>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
         <Card title="Informasi Penghapusan" sub="Data penghapusan" icon={Trash2}>
           <Row label="Tanggal Penghapusan" value={new Date(data.tanggalPenghapusan).toLocaleDateString("id-ID")} />
           <Row label="Alasan" value={data.alasan} />

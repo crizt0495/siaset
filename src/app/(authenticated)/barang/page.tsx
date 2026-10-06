@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { Search, Eye, Pencil, Trash2 } from "lucide-react"
+import { Search, Eye, Pencil, Trash2, Package } from "lucide-react"
 import {
-  PageHeader, AddButton, Card, Table, TH, TD, Tr, Pagination,
-  Badge, ConfirmModal, Input, Select, EmptyState, Label,
+  PageHeader, AddButton, Card, DataList, ListActions, ListIndex,
+  Pagination, Badge, ConfirmModal, Input, Select, Label,
 } from "@/components/ui"
 
 interface Barang {
@@ -70,13 +70,8 @@ export default function BarangList() {
         <AddButton href="/barang/create">Tambah Barang</AddButton>
       </PageHeader>
 
-      <Card
-        noPad
-        className="mb-6"
-        title={undefined}
-        bodyClassName=""
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-4 border-b-[3px] border-ink bg-paper2">
+      <Card noPad>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 p-3 border-b-[3px] border-ink bg-paper2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" strokeWidth={3} />
             <Input type="text" placeholder="Cari barang..." value={search} className="!pl-10" onChange={e => { setSearch(e.target.value); setPage(1) }} />
@@ -95,49 +90,70 @@ export default function BarangList() {
           </Select>
         </div>
 
-        <Table
-          head={
-            <tr>
-              <TH className="!w-12">No</TH>
-              <TH>Kode</TH>
-              <TH>Nama</TH>
-              <TH>Komisi</TH>
-              <TH>Kondisi</TH>
-              <TH>Lokasi</TH>
-              <TH>Status</TH>
-              <TH className="!text-center">Jumlah</TH>
-              <TH className="!text-right">Aksi</TH>
-            </tr>
-          }
-        >
-          {loading ? (
-            <Tr><TD colSpan={9} className="!py-10 text-center text-muted font-bold">Memuat data...</TD></Tr>
-          ) : data.length === 0 ? (
-            <Tr>
-              <TD colSpan={9} className="!p-0">
-                <EmptyState icon={Trash2} text="Tidak ada data barang" />
-              </TD>
-            </Tr>
-          ) : data.map((b, i) => (
-            <Tr key={b.id}>
-              <TD className="font-bold text-muted">{(page - 1) * 10 + i + 1}</TD>
-              <TD className="font-mono text-xs font-bold">{b.kodeBarang}</TD>
-              <TD className="font-bold">{b.namaBarang}</TD>
-              <TD className="text-muted font-semibold">{b.komisi?.namaKomisi || "-"}</TD>
-              <TD><Badge color={kondisiColor[b.kondisi] || "default"}>{b.kondisi}</Badge></TD>
-              <TD className="text-muted font-semibold">{b.lokasi}</TD>
-              <TD><Badge color={statusColor[b.status] || "default"}>{b.status}</Badge></TD>
-              <TD className="!text-center brut-num">{b.jumlah}</TD>
-              <TD>
-                <div className="flex items-center justify-end gap-1.5">
-                  <Link href={`/barang/${b.id}`} className="brut-iconbtn brut-iconbtn-primary" title="Detail"><Eye className="w-4 h-4" strokeWidth={2.75} /></Link>
-                  <Link href={`/barang/${b.id}/edit`} className="brut-iconbtn brut-iconbtn-warn" title="Edit"><Pencil className="w-4 h-4" strokeWidth={2.75} /></Link>
-                  <button onClick={() => setDeleteId(b.id)} className="brut-iconbtn brut-iconbtn-danger" title="Hapus"><Trash2 className="w-4 h-4" strokeWidth={2.75} /></button>
-                </div>
-              </TD>
-            </Tr>
-          ))}
-        </Table>
+        <DataList<Barang>
+          rows={data}
+          getKey={(b) => b.id}
+          page={page}
+          perPage={10}
+          loading={loading}
+          emptyIcon={Package}
+          emptyText="Tidak ada data barang"
+          columns={[
+            {
+              header: "No",
+              render: (_b, i) => <ListIndex value={i + 1} />,
+              className: "!w-12 font-bold text-muted",
+              headClassName: "!w-12",
+            },
+            {
+              header: "Nama",
+              render: (b) => b.namaBarang,
+              slot: "title",
+            },
+            {
+              header: "Kode",
+              render: (b) => <span className="font-mono text-xs font-bold">{b.kodeBarang}</span>,
+              slot: "subtitle",
+            },
+            {
+              header: "Kondisi",
+              render: (b) => <Badge color={kondisiColor[b.kondisi] || "default"}>{b.kondisi}</Badge>,
+              slot: "chip",
+            },
+            {
+              header: "Status",
+              render: (b) => <Badge color={statusColor[b.status] || "default"}>{b.status}</Badge>,
+              slot: "chip",
+            },
+            {
+              header: "Komisi",
+              render: (b) => <span className="text-muted font-semibold">{b.komisi?.namaKomisi || "-"}</span>,
+            },
+            {
+              header: "Lokasi",
+              render: (b) => <span className="text-muted font-semibold">{b.lokasi}</span>,
+            },
+            {
+              header: "Jumlah",
+              render: (b) => <span className="brut-num">{b.jumlah}</span>,
+              className: "!text-center",
+              headClassName: "!text-center",
+            },
+            {
+              header: "Aksi",
+              render: (b) => (
+                <ListActions>
+                  <Link href={`/barang/${b.id}`} className="brut-iconbtn brut-iconbtn-primary" title="Detail" aria-label="Detail"><Eye className="w-4 h-4" strokeWidth={2.75} /></Link>
+                  <Link href={`/barang/${b.id}/edit`} className="brut-iconbtn brut-iconbtn-warn" title="Edit" aria-label="Edit"><Pencil className="w-4 h-4" strokeWidth={2.75} /></Link>
+                  <button onClick={() => setDeleteId(b.id)} className="brut-iconbtn brut-iconbtn-danger" title="Hapus" aria-label="Hapus"><Trash2 className="w-4 h-4" strokeWidth={2.75} /></button>
+                </ListActions>
+              ),
+              slot: "actions",
+              className: "!text-right",
+              headClassName: "!text-right",
+            },
+          ]}
+        />
 
         <Pagination page={page} totalPages={totalPages} setPage={setPage} />
       </Card>

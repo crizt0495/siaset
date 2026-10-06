@@ -5,7 +5,7 @@ import { useParams } from "next/navigation"
 import { ArrowRightLeft, RotateCcw, Package } from "lucide-react"
 import {
   PageHeader, BackLink, LoadingState, EmptyState, Card, Label,
-  Badge, ButtonLink, Button,
+  Badge, ButtonLink, Button, DetailRow as Row,
 } from "@/components/ui"
 
 interface Peminjaman {
@@ -14,15 +14,6 @@ interface Peminjaman {
   status: string; createdAt: string
   barang: { id: string; kodeBarang: string; namaBarang: string; jumlah: number; kondisi: string; lokasi: string; komisi?: { namaKomisi: string } | null }
   createdByUser?: { id: string; namaLengkap: string } | null
-}
-
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-2.5 border-b-2 border-ink/10 last:border-0">
-      <span className="text-xs font-bold text-muted uppercase tracking-wider shrink-0">{label}</span>
-      <span className="text-sm font-bold text-right break-words">{value}</span>
-    </div>
-  )
 }
 
 export default function PeminjamanDetail() {
@@ -50,9 +41,9 @@ export default function PeminjamanDetail() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5 sm:mb-6">
         <BackLink href="/peminjaman" />
-        <span className="text-sm font-bold text-muted uppercase tracking-wider">Peminjaman</span>
+        <span className="text-[0.7rem] sm:text-sm font-bold text-muted uppercase tracking-wider">Peminjaman</span>
       </div>
 
       <PageHeader
@@ -69,7 +60,7 @@ export default function PeminjamanDetail() {
         <ButtonLink href={`/peminjaman/${id}/edit`} variant="warn">Edit</ButtonLink>
       </PageHeader>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
         <Card title="Informasi Peminjaman" sub="Data peminjaman" icon={ArrowRightLeft}>
           <Row label="Peminjam" value={data.peminjam} />
           <Row label="Jumlah Dipinjam" value={<span className="brut-num text-lg">{data.jumlahDipinjam} unit</span>} />

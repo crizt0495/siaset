@@ -3,8 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { Wrench } from "lucide-react"
 import {
-  PageHeader, BackLink, Card, StatCard, Table, TH, TD, Tr,
-  Pagination, EmptyState,
+  PageHeader, BackLink, Card, StatCard, DataList, ListIndex, Pagination,
 } from "@/components/ui"
 
 interface Pemeliharaan {
@@ -38,9 +37,9 @@ export default function LaporanPemeliharaan() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5 sm:mb-6">
         <BackLink href="/reports" />
-        <span className="text-sm font-bold text-muted uppercase tracking-wider">Laporan</span>
+        <span className="text-[0.7rem] sm:text-sm font-bold text-muted uppercase tracking-wider">Laporan</span>
       </div>
 
       <PageHeader
@@ -49,36 +48,46 @@ export default function LaporanPemeliharaan() {
         desc="Riwayat perawatan aset"
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+      <div className="grid grid-cols-1 gap-3 sm:gap-5 mb-6 sm:mb-8">
         <StatCard icon={Wrench} title="Total Biaya Pemeliharaan" value={formatRp(totalBiaya)} face="good" />
       </div>
 
       <Card noPad>
-        <Table
-          head={
-            <tr>
-              <TH className="!w-12">No</TH>
-              <TH>Barang</TH>
-              <TH>Tanggal</TH>
-              <TH className="!text-right">Biaya</TH>
-              <TH>Keterangan</TH>
-            </tr>
-          }
-        >
-          {loading ? (
-            <Tr><TD colSpan={5} className="!py-10 text-center text-muted font-bold">Memuat data...</TD></Tr>
-          ) : data.length === 0 ? (
-            <Tr><TD colSpan={5} className="!p-0"><EmptyState icon={Wrench} text="Tidak ada data" /></TD></Tr>
-          ) : data.map((p, i) => (
-            <Tr key={p.id}>
-              <TD className="font-bold text-muted">{(page - 1) * 10 + i + 1}</TD>
-              <TD className="font-bold">{p.barang?.namaBarang || "-"}</TD>
-              <TD className="text-muted font-semibold">{formatDate(p.tanggal)}</TD>
-              <TD className="!text-right brut-num">{formatRp(p.biaya)}</TD>
-              <TD className="text-muted font-semibold">{p.keterangan || "-"}</TD>
-            </Tr>
-          ))}
-        </Table>
+        <DataList<Pemeliharaan>
+          rows={data}
+          getKey={(p) => p.id}
+          page={page}
+          perPage={10}
+          loading={loading}
+          emptyIcon={Wrench}
+          emptyText="Tidak ada data"
+          columns={[
+            {
+              header: "No",
+              render: (_p, i) => <ListIndex value={i + 1} />,
+              className: "!w-12 font-bold text-muted",
+              headClassName: "!w-12",
+            },
+            {
+              header: "Barang",
+              render: (p) => p.barang?.namaBarang || "-",
+              slot: "title",
+            },
+            {
+              header: "Biaya",
+              render: (p) => <span className="brut-num font-bold break-words">{formatRp(p.biaya)}</span>,
+              slot: "subtitle",
+            },
+            {
+              header: "Tanggal",
+              render: (p) => <span className="text-muted font-semibold">{formatDate(p.tanggal)}</span>,
+            },
+            {
+              header: "Keterangan",
+              render: (p) => <span className="text-muted font-semibold break-words">{p.keterangan || "-"}</span>,
+            },
+          ]}
+        />
 
         <Pagination page={page} totalPages={totalPages} setPage={setPage} />
       </Card>

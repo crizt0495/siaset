@@ -1,5 +1,8 @@
 import Link from "next/link"
-import { ChevronLeft, ChevronRight, Plus, X, ArrowLeft } from "lucide-react"
+import {
+  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
+  Plus, X, ArrowLeft, Inbox,
+} from "lucide-react"
 import type { ElementType, ReactNode, ButtonHTMLAttributes, InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from "react"
 
 /* ============================================================
@@ -19,20 +22,22 @@ export function PageHeader({
   extra?: ReactNode
 }) {
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-5 mb-8">
-      <div className="flex items-start gap-4">
+    <div className="mb-5 sm:mb-8">
+      <div className="flex items-start gap-3 sm:gap-4">
         {index && (
-          <div className="brut-sticker w-12 h-12 text-lg shrink-0 -rotate-3">
+          <div className="brut-sticker w-10 h-10 sm:w-12 sm:h-12 text-base sm:text-lg shrink-0 -rotate-3">
             {index}
           </div>
         )}
-        <div>
-          <h1 className="brut-title brut-h1">{title}</h1>
-          {desc && <p className="text-sm text-muted mt-1.5 font-medium">{desc}</p>}
+        <div className="min-w-0 flex-1">
+          <h1 className="brut-title brut-h1 break-words">{title}</h1>
+          {desc && <p className="text-xs sm:text-sm text-muted mt-1.5 font-medium break-words">{desc}</p>}
+          {extra && <div className="mt-2 sm:mt-2">{extra}</div>}
         </div>
-        {extra}
       </div>
-      {children && <div className="flex items-center gap-3 flex-wrap">{children}</div>}
+      {children && (
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap mt-4">{children}</div>
+      )}
     </div>
   )
 }
@@ -106,11 +111,11 @@ export function AddButton({ href, children }: { href: string; children: ReactNod
       <Link
         href={href}
         aria-label={typeof children === "string" ? children : undefined}
-        className="brut-btn brut-btn-primary fixed bottom-[calc(env(safe-area-inset-bottom)+4.6rem)] right-4 z-40 lg:hidden !w-14 !h-14 !rounded-full !p-0 shadow-[4px_4px_0_0_var(--shadow)]"
+        className="brut-btn brut-btn-primary fixed bottom-[calc(env(safe-area-inset-bottom)+5rem)] right-4 z-40 md:hidden !w-14 !h-14 !min-h-0 !rounded-full !p-0 shadow-[4px_4px_0_0_var(--shadow)]"
       >
         <Plus className="w-6 h-6" strokeWidth={3} />
       </Link>
-      <ButtonLink href={href} variant="primary" className="hidden lg:inline-flex">
+      <ButtonLink href={href} variant="primary" className="hidden md:inline-flex">
         <Plus className="w-4 h-4" strokeWidth={3} />
         {children}
       </ButtonLink>
@@ -227,8 +232,8 @@ export function Card({
   return (
     <div className={`brut-card ${className}`}>
       {(title || actions) && (
-        <div className="flex items-center justify-between gap-3 border-b-[3px] border-ink bg-paper2 px-5 py-3.5">
-          <div className="flex items-center gap-2.5 min-w-0">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b-[3px] border-ink bg-paper2 px-3.5 sm:px-5 py-3">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
             {Icon && (
               <span className="brut-sticker w-8 h-8 text-sm shrink-0 rotate-3">
                 <Icon className="w-4 h-4" strokeWidth={3} />
@@ -236,47 +241,184 @@ export function Card({
             )}
             <div className="min-w-0">
               <h3 className="brut-title brut-h3 leading-tight">{title}</h3>
-              {sub && <p className="text-xs text-muted font-medium truncate">{sub}</p>}
+              {sub && <p className="text-[0.68rem] text-muted font-medium leading-snug">{sub}</p>}
             </div>
           </div>
           {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
         </div>
       )}
-      <div className={noPad ? "" : `p-5 ${bodyClassName}`}>{children}</div>
+      <div className={noPad ? "" : `p-3.5 sm:p-5 ${bodyClassName}`}>{children}</div>
     </div>
   )
 }
 
 /* ============================================================
-   Table
+   Data list — mobile-first
+   Renders a stacked card list on phones and a table from `md` up.
    ============================================================ */
-export function Table({
-  head,
-  children,
+export type ListSlot = "title" | "subtitle" | "chip" | "meta" | "actions" | "hidden"
+
+export type ListColumn<T> = {
+  /** Column heading, also used as the label for `meta` slots on mobile. */
+  header: string
+  render: (row: T, index: number) => ReactNode
+  /** Where this cell goes in the mobile card. Defaults to `meta`. */
+  slot?: ListSlot
+  className?: string
+  headClassName?: string
+}
+
+export function DataList<T>({
+  columns,
+  rows,
+  getKey,
+  page = 1,
+  perPage,
+  loading = false,
+  loadingText = "Memuat data...",
+  emptyIcon,
+  emptyText = "Tidak ada data",
+  emptyAction,
 }: {
-  head: ReactNode
-  children: ReactNode
+  columns: ListColumn<T>[]
+  rows: T[]
+  getKey: (row: T, index: number) => string
+  page?: number
+  perPage?: number
+  loading?: boolean
+  loadingText?: string
+  emptyIcon?: ElementType
+  emptyText?: string
+  emptyAction?: ReactNode
 }) {
+  const colCount = columns.length
+  const offset = perPage ? (page - 1) * perPage : 0
+
+  if (loading) {
+    return (
+      <div className="py-12 text-center text-muted font-bold text-sm uppercase tracking-wider">
+        {loadingText}
+      </div>
+    )
+  }
+
+  if (rows.length === 0) {
+    return <EmptyState icon={emptyIcon || Inbox} text={emptyText} action={emptyAction} />
+  }
+
+  const titleCols = columns.filter((c) => (c.slot ?? "meta") === "title")
+  const subCols = columns.filter((c) => c.slot === "subtitle")
+  const chipCols = columns.filter((c) => c.slot === "chip")
+  const metaCols = columns.filter((c) => (c.slot ?? "meta") === "meta")
+  const actionCols = columns.filter((c) => c.slot === "actions")
+
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm border-collapse">
-        <thead className="brut-thead">{head}</thead>
-        <tbody className="brut-tbody">{children}</tbody>
-      </table>
-    </div>
+    <>
+      {/* ---------- Mobile: stacked cards ---------- */}
+      <ul className="md:hidden divide-y-[3px] divide-ink">
+        {rows.map((row, i) => (
+          <li key={getKey(row, i)} className="p-3.5 active:bg-paper2">
+            {titleCols.map((c) => (
+              <div key={c.header} className="text-[0.95rem] font-bold leading-snug break-words">
+                {c.render(row, offset + i)}
+              </div>
+            ))}
+            {subCols.map((c) => (
+              <div key={c.header} className="font-mono text-xs text-muted break-words">
+                {c.render(row, offset + i)}
+              </div>
+            ))}
+
+            {chipCols.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                {chipCols.map((c) => (
+                  <span key={c.header} className="contents">
+                    {c.render(row, offset + i)}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {metaCols.length > 0 && (
+              <dl className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2">
+                {metaCols.map((c) => (
+                  <div key={c.header} className="min-w-0">
+                    <dt className="text-[0.6rem] font-bold text-muted uppercase tracking-wider">
+                      {c.header}
+                    </dt>
+                    <dd className="text-[0.8rem] font-semibold break-words mt-0.5">{c.render(row, offset + i)}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+
+            {actionCols.length > 0 && (
+              <div className="flex items-center gap-2 mt-3">
+                {actionCols.map((c) => (
+                  <span key={c.header} className="contents">
+                    {c.render(row, offset + i)}
+                  </span>
+                ))}
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      {/* ---------- md and up: table ---------- */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full text-sm border-collapse">
+          <thead className="brut-thead">
+            <tr>
+              {columns.map((c) => (
+                <th key={c.header} className={c.headClassName || ""}>
+                  {c.header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="brut-tbody">
+            {rows.map((row, i) => (
+              <tr key={getKey(row, i)} className="brut-tr">
+                {columns.map((c) => (
+                  <td key={c.header} className={c.className || ""}>
+                    {c.render(row, offset + i)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <span className="sr-only">{colCount} kolom data</span>
+    </>
   )
 }
 
-export function TH({ children, className = "" }: { children?: ReactNode; className?: string }) {
-  return <th className={className}>{children}</th>
+/** Row wrapper so action groups align left on mobile cards. */
+export function ListActions({ children }: { children: ReactNode }) {
+  return <span className="flex items-center gap-2 flex-wrap">{children}</span>
 }
 
-export function TD({ children, className = "", colSpan }: { children?: ReactNode; className?: string; colSpan?: number }) {
-  return <td colSpan={colSpan} className={className}>{children}</td>
+/** Square index tile shown at the start of a mobile card. */
+export function ListIndex({ value }: { value: number }) {
+  return (
+    <span className="brut-sticker w-7 h-7 text-[0.7rem] shrink-0 -rotate-3">{value}</span>
+  )
 }
 
-export function Tr({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <tr className={`brut-tr ${className}`}>{children}</tr>
+/* ============================================================
+   Detail row — label / value pair, stacks on narrow screens
+   ============================================================ */
+export function DetailRow({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="flex flex-col xs:flex-row xs:items-start xs:justify-between gap-0.5 xs:gap-4 py-2.5 border-b-2 border-ink/10 last:border-0">
+      <span className="text-[0.68rem] font-bold text-muted uppercase tracking-wider shrink-0">
+        {label}
+      </span>
+      <span className="text-sm font-bold xs:text-right break-words min-w-0">{value}</span>
+    </div>
+  )
 }
 
 /* ============================================================
@@ -292,11 +434,20 @@ export function Pagination({
   setPage: (n: number | ((p: number) => number)) => void
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-t-[3px] border-ink bg-paper2 px-4 py-3">
-      <p className="text-xs font-bold text-muted uppercase tracking-wider">
-        Halaman {page} <span className="opacity-60">/ {totalPages}</span>
+    <div className="flex items-center justify-between gap-2 border-t-[3px] border-ink bg-paper2 px-3 sm:px-4 py-3">
+      <p className="text-[0.68rem] sm:text-xs font-bold text-muted uppercase tracking-wider min-w-0 truncate">
+        Halaman <span className="brut-num text-ink">{page}</span>
+        <span className="opacity-60"> / {totalPages}</span>
       </p>
-      <div className="flex gap-2">
+      <div className="flex gap-2 shrink-0">
+        <IconButton
+          onClick={() => setPage(1)}
+          disabled={page <= 1}
+          title="Halaman pertama"
+          className="hidden sm:inline-flex"
+        >
+          <ChevronsLeft className="w-4 h-4" strokeWidth={3} />
+        </IconButton>
         <IconButton
           onClick={() => setPage((p) => Math.max(1, p - 1))}
           disabled={page <= 1}
@@ -310,6 +461,14 @@ export function Pagination({
           title="Berikutnya"
         >
           <ChevronRight className="w-4 h-4" strokeWidth={3} />
+        </IconButton>
+        <IconButton
+          onClick={() => setPage(totalPages)}
+          disabled={page >= totalPages}
+          title="Halaman terakhir"
+          className="hidden sm:inline-flex"
+        >
+          <ChevronsRight className="w-4 h-4" strokeWidth={3} />
         </IconButton>
       </div>
     </div>
@@ -391,13 +550,15 @@ export function EmptyState({
   action?: ReactNode
 }) {
   return (
-    <div className="p-12 text-center">
+    <div className="p-8 sm:p-12 text-center">
       {Icon && (
-        <div className="brut-sticker w-16 h-16 text-2xl mx-auto mb-4 rotate-3">
-          <Icon className="w-8 h-8" strokeWidth={2.5} />
+        <div className="brut-sticker w-14 h-14 sm:w-16 sm:h-16 text-xl sm:text-2xl mx-auto mb-4 rotate-3">
+          <Icon className="w-7 h-7 sm:w-8 h-8" strokeWidth={2.5} />
         </div>
       )}
-      <p className="text-sm font-bold text-muted uppercase tracking-wider mb-4">{text}</p>
+      <p className="text-[0.7rem] sm:text-sm font-bold text-muted uppercase tracking-wider mb-4 break-words">
+        {text}
+      </p>
       {action}
     </div>
   )
@@ -454,15 +615,17 @@ export function StatCard({
   className?: string
 }) {
   return (
-    <div className={`brut-card p-5 ${faceMap[face]} ${className}`}>
-      <div className="flex items-start justify-between gap-3">
+    <div className={`brut-card p-3.5 sm:p-5 ${faceMap[face]} ${className}`}>
+      <div className="flex items-start justify-between gap-2 sm:gap-3">
         <div className="min-w-0">
-          <p className="text-[0.65rem] font-bold uppercase tracking-widest opacity-70">{title}</p>
-          <p className="brut-num text-3xl mt-1.5 leading-none">{value}</p>
-          {sub && <p className="text-xs font-semibold mt-2 opacity-75">{sub}</p>}
+          <p className="text-[0.6rem] sm:text-[0.65rem] font-bold uppercase tracking-widest opacity-70 leading-tight">
+            {title}
+          </p>
+          <p className="brut-num text-xl xs:text-2xl sm:text-3xl mt-1.5 leading-none break-words">{value}</p>
+          {sub && <p className="text-[0.68rem] sm:text-xs font-semibold mt-2 opacity-75 leading-snug">{sub}</p>}
         </div>
-        <span className="w-11 h-11 shrink-0 grid place-items-center border-[3px] border-ink bg-card text-ink rotate-3">
-          <Icon className="w-5 h-5" strokeWidth={2.5} />
+        <span className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 grid place-items-center border-[3px] border-ink bg-card text-ink rotate-3">
+          <Icon className="w-4 h-4 sm:w-5 h-5" strokeWidth={2.5} />
         </span>
       </div>
     </div>
@@ -513,20 +676,20 @@ export function FormCard({
   maxWidth?: string
 }) {
   return (
-    <div className={`brut-card ${maxWidth} ${className}`}>
+    <div className={`brut-card w-full ${maxWidth} ${className}`}>
       {(title || Icon) && (
-        <div className="flex items-center gap-2.5 border-b-[3px] border-ink bg-paper2 px-5 py-3.5">
+        <div className="flex items-center gap-2.5 border-b-[3px] border-ink bg-paper2 px-3.5 sm:px-5 py-3">
           {Icon && (
-            <span className="brut-sticker w-8 h-8 text-sm rotate-3">
+            <span className="brut-sticker w-8 h-8 text-sm rotate-3 shrink-0">
               <Icon className="w-4 h-4" strokeWidth={3} />
             </span>
           )}
-          <h3 className="brut-title brut-h3 uppercase">{title}</h3>
+          <h3 className="brut-title brut-h3 uppercase break-words">{title}</h3>
         </div>
       )}
-      <div className="p-5 sm:p-6">{children}</div>
+      <div className="p-3.5 sm:p-6">{children}</div>
       {footer && (
-        <div className="flex justify-end gap-3 border-t-[3px] border-ink bg-paper2 px-5 py-4">
+        <div className="flex flex-col-reverse xs:flex-row xs:justify-end gap-2 xs:gap-3 border-t-[3px] border-ink bg-paper2 px-3.5 sm:px-5 py-3.5">
           {footer}
         </div>
       )}

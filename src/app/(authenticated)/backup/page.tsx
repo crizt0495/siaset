@@ -5,7 +5,7 @@ import {
   Database, Download, Trash2, Upload, RefreshCw, CheckCircle, AlertCircle, HardDrive, FileUp, Server,
 } from "lucide-react"
 import {
-  PageHeader, Label, Card, StatCard, Table, TH, TD, Tr,
+  PageHeader, Label, Card, StatCard, DataList, ListActions, ListIndex,
   Button, IconButton, ConfirmModal, EmptyState, LoadingState,
 } from "@/components/ui"
 
@@ -109,18 +109,13 @@ export default function BackupPage() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
-        <span className="brut-sticker w-12 h-12 text-lg -rotate-3"><Database className="w-6 h-6" strokeWidth={3} /></span>
-        <span className="text-sm font-bold text-muted uppercase tracking-wider">Sistem</span>
-      </div>
-
       <PageHeader
         index="10"
         title="Backup Database"
         desc="Buat backup, unduh file SQL, dan pulihkan data"
         extra={<Label color="purple">10 · Backup</Label>}
       >
-        <Button onClick={handleCreateBackup} disabled={creating} variant="primary">
+        <Button onClick={handleCreateBackup} disabled={creating} variant="primary" className="w-full sm:w-auto">
           {creating ? (
             <>
               <RefreshCw className="w-4 h-4 animate-spin" strokeWidth={3} /> Membuat Backup...
@@ -133,7 +128,7 @@ export default function BackupPage() {
         </Button>
       </PageHeader>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+      <div className="grid grid-cols-1 xs:grid-cols-3 gap-3 sm:gap-5 mb-6 sm:mb-8">
         <StatCard icon={Database} title="Backup Tersimpan" value={backups.length} face="primary" />
         <StatCard icon={HardDrive} title="Total Ukuran" value={formatBytes(totalSize)} face="warn" />
         <StatCard
@@ -145,15 +140,15 @@ export default function BackupPage() {
       </div>
 
       {message && (
-        <div className={`brut-card p-4 mb-6 flex items-center gap-3 ${message.type === "success" ? "bg-good" : "bg-danger text-white"}`}>
-          {message.type === "success" ? <CheckCircle className="w-5 h-5 text-ink" strokeWidth={3} /> : <AlertCircle className="w-5 h-5" strokeWidth={3} />}
-          <p className="text-sm font-bold">{message.text}</p>
+        <div className={`brut-card p-3.5 sm:p-4 mb-6 flex items-start gap-3 ${message.type === "success" ? "bg-good" : "bg-danger text-white"}`}>
+          {message.type === "success" ? <CheckCircle className="w-5 h-5 text-ink shrink-0" strokeWidth={3} /> : <AlertCircle className="w-5 h-5 shrink-0" strokeWidth={3} />}
+          <p className="text-sm font-bold break-words">{message.text}</p>
         </div>
       )}
 
       {/* Restore */}
       <Card
-        className="mb-8"
+        className="mb-6 sm:mb-8"
         title="Restore Database"
         sub="Pulihkan data dari file SQL backup"
         icon={Server}
@@ -165,10 +160,10 @@ export default function BackupPage() {
           className="hidden"
           onChange={(e) => setRestoreFile(e.target.files?.[0] || null)}
         />
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="brut-btn flex-1 justify-start !text-left"
+            className="brut-btn flex-1 justify-start !text-left !min-w-0"
             type="button"
           >
             <FileUp className="w-4 h-4 shrink-0" strokeWidth={3} />
@@ -180,6 +175,7 @@ export default function BackupPage() {
             variant="danger"
             onClick={() => setConfirmRestore(true)}
             disabled={!restoreFile}
+            className="w-full sm:w-auto"
           >
             <Upload className="w-4 h-4" strokeWidth={3} /> Restore Sekarang
           </Button>
@@ -202,42 +198,59 @@ export default function BackupPage() {
         ) : backups.length === 0 ? (
           <EmptyState icon={Database} text="Belum ada backup" />
         ) : (
-          <Table
-            head={
-              <tr>
-                <TH className="!w-12">No</TH>
-                <TH>Nama File</TH>
-                <TH>Ukuran</TH>
-                <TH>Tanggal</TH>
-                <TH>Status</TH>
-                <TH className="!text-right">Aksi</TH>
-              </tr>
-            }
-          >
-            {backups.map((backup, i) => (
-              <Tr key={backup.id}>
-                <TD className="font-bold text-muted">{i + 1}</TD>
-                <TD className="font-mono text-xs font-bold">{backup.filename}</TD>
-                <TD className="text-muted font-semibold">{backup.size}</TD>
-                <TD className="text-muted font-semibold">{backup.createdAt}</TD>
-                <TD><span className="brut-badge brut-badge-green">Berhasil</span></TD>
-                <TD>
-                  <div className="flex items-center justify-end gap-1.5">
+          <DataList<BackupFile>
+            rows={backups}
+            getKey={(b) => b.id}
+            emptyIcon={Database}
+            emptyText="Belum ada backup"
+            columns={[
+              {
+                header: "No",
+                render: (_b, i) => <ListIndex value={i + 1} />,
+                className: "!w-12 font-bold text-muted",
+                headClassName: "!w-12",
+              },
+              {
+                header: "Nama File",
+                render: (b) => <span className="font-mono text-xs font-bold break-all">{b.filename}</span>,
+                slot: "title",
+              },
+              {
+                header: "Status",
+                render: () => <span className="brut-badge brut-badge-green">Berhasil</span>,
+                slot: "chip",
+              },
+              {
+                header: "Ukuran",
+                render: (b) => <span className="text-muted font-semibold">{b.size}</span>,
+              },
+              {
+                header: "Tanggal",
+                render: (b) => <span className="text-muted font-semibold">{b.createdAt}</span>,
+              },
+              {
+                header: "Aksi",
+                render: (b) => (
+                  <ListActions>
                     <a
-                      href={`/api/backup/${encodeURIComponent(backup.id)}/download`}
+                      href={`/api/backup/${encodeURIComponent(b.id)}/download`}
                       className="brut-iconbtn brut-iconbtn-good"
                       title="Download SQL"
+                      aria-label="Download SQL"
                     >
                       <Download className="w-4 h-4" strokeWidth={2.75} />
                     </a>
-                    <IconButton title="Hapus" variant="danger" onClick={() => setDeleteId(backup.id)}>
+                    <IconButton title="Hapus" aria-label="Hapus" variant="danger" onClick={() => setDeleteId(b.id)}>
                       <Trash2 className="w-4 h-4" strokeWidth={2.75} />
                     </IconButton>
-                  </div>
-                </TD>
-              </Tr>
-            ))}
-          </Table>
+                  </ListActions>
+                ),
+                slot: "actions",
+                className: "!text-right",
+                headClassName: "!text-right",
+              },
+            ]}
+          />
         )}
       </Card>
 

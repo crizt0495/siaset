@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { Search, Eye, Pencil, Trash2, RotateCcw, ArrowRightLeft } from "lucide-react"
 import {
-  PageHeader, AddButton, Card, Table, TH, TD, Tr, Pagination,
-  ConfirmModal, Input, Select, EmptyState, Badge, Label,
+  PageHeader, AddButton, Card, DataList, ListActions, ListIndex,
+  Pagination, ConfirmModal, Input, Select, Badge, Label,
 } from "@/components/ui"
 
 interface Peminjaman {
@@ -69,8 +69,8 @@ export default function PeminjamanList() {
       </PageHeader>
 
       <Card noPad>
-        <div className="p-4 border-b-[3px] border-ink bg-paper2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="p-3 border-b-[3px] border-ink bg-paper2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" strokeWidth={3} />
               <Input type="text" placeholder="Cari peminjam atau barang..." value={search} className="!pl-10" onChange={e => { setSearch(e.target.value); setPage(1) }} />
@@ -83,51 +83,72 @@ export default function PeminjamanList() {
           </div>
         </div>
 
-        <Table
-          head={
-            <tr>
-              <TH className="!w-12">No</TH>
-              <TH>Barang</TH>
-              <TH>Peminjam</TH>
-              <TH>Jumlah</TH>
-              <TH>Tgl Pinjam</TH>
-              <TH>Tgl Kembali</TH>
-              <TH>Status</TH>
-              <TH className="!text-right">Aksi</TH>
-            </tr>
-          }
-        >
-          {loading ? (
-            <Tr><TD colSpan={8} className="!py-10 text-center text-muted font-bold">Memuat data...</TD></Tr>
-          ) : data.length === 0 ? (
-            <Tr><TD colSpan={8} className="!p-0"><EmptyState icon={ArrowRightLeft} text="Tidak ada data peminjaman" /></TD></Tr>
-          ) : data.map((p, i) => (
-            <Tr key={p.id}>
-              <TD className="font-bold text-muted">{(page - 1) * 10 + i + 1}</TD>
-              <TD>
-                <div className="font-bold">{p.barang.namaBarang}</div>
-                <div className="font-mono text-xs text-muted">{p.barang.kodeBarang}</div>
-              </TD>
-              <TD className="font-bold">{p.peminjam}</TD>
-              <TD className="brut-num">{p.jumlahDipinjam}</TD>
-              <TD className="text-muted font-semibold">{formatDate(p.tanggalPinjam)}</TD>
-              <TD className="text-muted font-semibold">{formatDate(p.tanggalKembali)}</TD>
-              <TD><Badge color={statusColor[p.status] || "default"}>{p.status}</Badge></TD>
-              <TD>
-                <div className="flex items-center justify-end gap-1.5">
-                  <Link href={`/peminjaman/${p.id}`} className="brut-iconbtn brut-iconbtn-primary" title="Detail"><Eye className="w-4 h-4" strokeWidth={2.75} /></Link>
-                  <Link href={`/peminjaman/${p.id}/edit`} className="brut-iconbtn brut-iconbtn-warn" title="Edit"><Pencil className="w-4 h-4" strokeWidth={2.75} /></Link>
+        <DataList<Peminjaman>
+          rows={data}
+          getKey={(p) => p.id}
+          page={page}
+          perPage={10}
+          loading={loading}
+          emptyIcon={ArrowRightLeft}
+          emptyText="Tidak ada data peminjaman"
+          columns={[
+            {
+              header: "No",
+              render: (_p, i) => <ListIndex value={i + 1} />,
+              className: "!w-12 font-bold text-muted",
+              headClassName: "!w-12",
+            },
+            {
+              header: "Barang",
+              render: (p) => (
+                <>
+                  <div className="font-bold">{p.barang?.namaBarang}</div>
+                  <div className="font-mono text-xs text-muted">{p.barang?.kodeBarang}</div>
+                </>
+              ),
+              slot: "title",
+            },
+            {
+              header: "Peminjam",
+              render: (p) => <span className="font-bold">{p.peminjam}</span>,
+            },
+            {
+              header: "Status",
+              render: (p) => <Badge color={statusColor[p.status] || "default"}>{p.status}</Badge>,
+              slot: "chip",
+            },
+            {
+              header: "Jumlah",
+              render: (p) => <span className="brut-num">{p.jumlahDipinjam}</span>,
+            },
+            {
+              header: "Tgl Pinjam",
+              render: (p) => <span className="text-muted font-semibold">{formatDate(p.tanggalPinjam)}</span>,
+            },
+            {
+              header: "Tgl Kembali",
+              render: (p) => <span className="text-muted font-semibold">{formatDate(p.tanggalKembali)}</span>,
+            },
+            {
+              header: "Aksi",
+              render: (p) => (
+                <ListActions>
+                  <Link href={`/peminjaman/${p.id}`} className="brut-iconbtn brut-iconbtn-primary" title="Detail" aria-label="Detail"><Eye className="w-4 h-4" strokeWidth={2.75} /></Link>
+                  <Link href={`/peminjaman/${p.id}/edit`} className="brut-iconbtn brut-iconbtn-warn" title="Edit" aria-label="Edit"><Pencil className="w-4 h-4" strokeWidth={2.75} /></Link>
                   {p.status === "Dipinjam" && (
-                    <button onClick={() => handleKembalikan(p.id)} className="brut-iconbtn brut-iconbtn-good" title="Kembalikan">
+                    <button onClick={() => handleKembalikan(p.id)} className="brut-iconbtn brut-iconbtn-good" title="Kembalikan" aria-label="Kembalikan">
                       <RotateCcw className="w-4 h-4" strokeWidth={2.75} />
                     </button>
                   )}
-                  <button onClick={() => setDeleteId(p.id)} className="brut-iconbtn brut-iconbtn-danger" title="Hapus"><Trash2 className="w-4 h-4" strokeWidth={2.75} /></button>
-                </div>
-              </TD>
-            </Tr>
-          ))}
-        </Table>
+                  <button onClick={() => setDeleteId(p.id)} className="brut-iconbtn brut-iconbtn-danger" title="Hapus" aria-label="Hapus"><Trash2 className="w-4 h-4" strokeWidth={2.75} /></button>
+                </ListActions>
+              ),
+              slot: "actions",
+              className: "!text-right",
+              headClassName: "!text-right",
+            },
+          ]}
+        />
 
         <Pagination page={page} totalPages={totalPages} setPage={setPage} />
       </Card>

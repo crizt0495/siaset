@@ -39,6 +39,9 @@
 }
 
 @theme inline {
+  /* Extra mobile breakpoint for 360-400px phones */
+  --breakpoint-xs: 26rem;
+
   --color-paper: var(--paper);
   --color-paper2: var(--paper2);
   --color-card: var(--card);
@@ -540,7 +543,9 @@
 }
 
 /* ============================================================
-   Mobile app shell (Android-like)
+   Mobile-first defaults
+   Touch targets and inputs are sized for phones by default,
+   then compacted from `sm` upward.
    ============================================================ */
 @keyframes sheet-up {
   from {
@@ -561,30 +566,53 @@
   padding-top: env(safe-area-inset-top);
 }
 
-@media (max-width: 1023px) {
-  /* Comfortable touch targets */
-  .brut-iconbtn {
-    width: 2.75rem;
-    height: 2.75rem;
-  }
-  .brut-btn {
-    min-height: 2.75rem;
-  }
-  /* Momentum scrolling on table overflow, hide scrollbar */
-  .overflow-x-auto {
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-  .overflow-x-auto::-webkit-scrollbar {
-    display: none;
-  }
+/* Comfortable touch targets as the base (mobile) case */
+.brut-iconbtn {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+.brut-btn {
+  min-height: 2.75rem;
 }
 
-@media (max-width: 640px) {
-  /* Prevent iOS zoom on focus */
+/* Momentum scrolling on table overflow, hidden scrollbar */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.overflow-x-auto::-webkit-scrollbar {
+  display: none;
+}
+
+/* Prevent iOS zoom on focus: inputs are 16px at every size */
+.brut-input,
+.brut-select,
+.brut-textarea {
+  font-size: 16px;
+}
+
+@media (min-width: 640px) {
+  /* Compact targets once a mouse is likely */
+  .brut-iconbtn {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+  .brut-btn {
+    min-height: 0;
+  }
+  .brut-btn-sm {
+    min-height: 2rem;
+  }
   .brut-input,
   .brut-select,
   .brut-textarea {
-    font-size: 16px;
+    font-size: 0.875rem;
+  }
+  /* Restore visible scrollbars on pointer devices */
+  .overflow-x-auto {
+    scrollbar-width: auto;
+  }
+  .overflow-x-auto::-webkit-scrollbar {
+    display: block;
   }
 }

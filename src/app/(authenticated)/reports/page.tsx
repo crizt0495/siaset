@@ -297,7 +297,7 @@ export default function ReportsPage() {
   ]
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <PageHeader
         index="07"
         title="Laporan"
@@ -314,7 +314,7 @@ export default function ReportsPage() {
         }
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-5">
         <StatCard icon={Package} title="Total Aset" value={summary.totalBarang} sub={`${summary.barangAktif} aktif`} face="primary" />
         <StatCard icon={ArrowRightLeft} title="Peminjaman" value={summary.totalPeminjaman} sub={`${summary.peminjamanAktif} aktif`} face="warn" />
         <StatCard icon={TrendingUp} title="Mutasi" value={summary.totalMutasi} sub="total riwayat" face="vibe" />
@@ -327,7 +327,7 @@ export default function ReportsPage() {
         sub="Persempit rentang data laporan"
         icon={Filter}
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
           <div>
             <Label>Komisi</Label>
             <Select value={filterKomisi} onChange={(e) => setFilterKomisi(e.target.value)} className="mt-2">
@@ -368,7 +368,7 @@ export default function ReportsPage() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <Card
           title="Aset per Komisi"
           sub="Distribusi aset berdasarkan komisi"
@@ -434,19 +434,19 @@ export default function ReportsPage() {
           </span>
           <h2 className="brut-title brut-h2">Laporan Detail</h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-5">
           {subReports.map((report) => {
             const Icon = report.icon
             return (
               <a
                 key={report.title}
                 href={report.href}
-                className="brut-card p-5 bg-card hover:bg-paper2 transition-colors group"
+                className="brut-card p-4 sm:p-5 bg-card hover:bg-paper2 transition-colors group"
               >
-                <span className="brut-sticker w-11 h-11 text-lg mb-4 rotate-3 group-hover:-rotate-3 transition-transform">
+                <span className="brut-sticker w-11 h-11 text-lg mb-3 sm:mb-4 rotate-3 group-hover:-rotate-3 transition-transform">
                   <Icon className="w-5 h-5" strokeWidth={3} />
                 </span>
-                <h3 className="brut-title brut-h3">{report.title}</h3>
+                <h3 className="brut-title brut-h3 break-words">{report.title}</h3>
                 <p className="text-xs text-muted font-semibold mt-1">{report.desc}</p>
                 <p className="mt-3 text-xs font-bold uppercase tracking-wider text-primary">
                   Lihat detail →

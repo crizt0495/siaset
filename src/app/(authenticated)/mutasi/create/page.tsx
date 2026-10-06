@@ -70,9 +70,9 @@ export default function MutasiCreate() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5 sm:mb-6">
         <BackLink href="/mutasi" />
-        <span className="text-sm font-bold text-muted uppercase tracking-wider">Mutasi</span>
+        <span className="text-[0.7rem] sm:text-sm font-bold text-muted uppercase tracking-wider">Mutasi</span>
       </div>
 
       <PageHeader
@@ -96,8 +96,8 @@ export default function MutasiCreate() {
             </>
           }
         >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
+            <div className="space-y-4 sm:space-y-5">
               <Field label="Pilih Barang" required>
                 <Select required value={form.barangId} onChange={set("barangId")}>
                   <option value="">-- Pilih Barang --</option>
@@ -111,7 +111,7 @@ export default function MutasiCreate() {
               </Field>
             </div>
 
-            <div className="space-y-5">
+            <div className="space-y-4 sm:space-y-5">
               <Field label="Lokasi Tujuan" required>
                 <Input type="text" required value={form.lokasiTujuan} onChange={set("lokasiTujuan")} placeholder="Masukkan lokasi tujuan baru" />
               </Field>

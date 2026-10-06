@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from "react"
 import { FileDown, Package } from "lucide-react"
 import {
-  PageHeader, BackLink, Badge, Card, StatCard, Select, Table,
-  TH, TD, Tr, Pagination, EmptyState, Button,
+  PageHeader, BackLink, Badge, Card, StatCard, Select, DataList,
+  ListIndex, Pagination, Button,
 } from "@/components/ui"
 
 interface Aset {
@@ -60,9 +60,9 @@ export default function LaporanAset() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5 sm:mb-6">
         <BackLink href="/reports" />
-        <span className="text-sm font-bold text-muted uppercase tracking-wider">Laporan</span>
+        <span className="text-[0.7rem] sm:text-sm font-bold text-muted uppercase tracking-wider">Laporan</span>
       </div>
 
       <PageHeader
@@ -70,12 +70,12 @@ export default function LaporanAset() {
         title="Laporan Aset"
         desc="Data seluruh aset dan inventaris"
       >
-        <Button onClick={() => alert("Coming soon")} variant="good">
+        <Button onClick={() => alert("Coming soon")} variant="good" className="w-full sm:w-auto">
           <FileDown className="w-4 h-4" strokeWidth={3} /> Export
         </Button>
       </PageHeader>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-6 sm:mb-8">
         <StatCard icon={Package} title="Total Aset" value={stats.total} face="primary" />
         <StatCard icon={Package} title="Aktif" value={stats.aktif} face="good" />
         <StatCard icon={Package} title="Nonaktif" value={stats.nonaktif} face="warn" />
@@ -83,7 +83,7 @@ export default function LaporanAset() {
       </div>
 
       <Card noPad>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 border-b-[3px] border-ink bg-paper2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 p-3 border-b-[3px] border-ink bg-paper2">
           <Select value={filterKomisi} onChange={e => { setFilterKomisi(e.target.value); setPage(1) }}>
             <option value="">Semua Komisi</option>
             {komisiList.map(k => <option key={k.id} value={k.id}>{k.namaKomisi}</option>)}
@@ -98,39 +98,63 @@ export default function LaporanAset() {
           </Select>
         </div>
 
-        <Table
-          head={
-            <tr>
-              <TH className="!w-12">No</TH>
-              <TH>Kode</TH>
-              <TH>Nama</TH>
-              <TH>Komisi</TH>
-              <TH>Kondisi</TH>
-              <TH>Status</TH>
-              <TH>Lokasi</TH>
-              <TH className="!text-right">Harga</TH>
-              <TH className="!text-center">Jumlah</TH>
-            </tr>
-          }
-        >
-          {loading ? (
-            <Tr><TD colSpan={9} className="!py-10 text-center text-muted font-bold">Memuat data...</TD></Tr>
-          ) : data.length === 0 ? (
-            <Tr><TD colSpan={9} className="!p-0"><EmptyState icon={Package} text="Tidak ada data" /></TD></Tr>
-          ) : data.map((a, i) => (
-            <Tr key={a.id}>
-              <TD className="font-bold text-muted">{(page - 1) * 10 + i + 1}</TD>
-              <TD className="font-mono text-xs font-bold">{a.kodeBarang}</TD>
-              <TD className="font-bold">{a.namaBarang}</TD>
-              <TD className="text-muted font-semibold">{a.komisi?.namaKomisi || "-"}</TD>
-              <TD><Badge color={kondisiColor[a.kondisi] || "default"}>{a.kondisi}</Badge></TD>
-              <TD><Badge color={statusColor[a.status] || "default"}>{a.status}</Badge></TD>
-              <TD className="text-muted font-semibold">{a.lokasi}</TD>
-              <TD className="!text-right brut-num">{formatRp(a.hargaPerolehan)}</TD>
-              <TD className="!text-center brut-num">{a.jumlah}</TD>
-            </Tr>
-          ))}
-        </Table>
+        <DataList<Aset>
+          rows={data}
+          getKey={(a) => a.id}
+          page={page}
+          perPage={10}
+          loading={loading}
+          emptyIcon={Package}
+          emptyText="Tidak ada data"
+          columns={[
+            {
+              header: "No",
+              render: (_a, i) => <ListIndex value={i + 1} />,
+              className: "!w-12 font-bold text-muted",
+              headClassName: "!w-12",
+            },
+            {
+              header: "Nama",
+              render: (a) => a.namaBarang,
+              slot: "title",
+            },
+            {
+              header: "Kode",
+              render: (a) => <span className="font-mono text-xs font-bold">{a.kodeBarang}</span>,
+              slot: "subtitle",
+            },
+            {
+              header: "Kondisi",
+              render: (a) => <Badge color={kondisiColor[a.kondisi] || "default"}>{a.kondisi}</Badge>,
+              slot: "chip",
+            },
+            {
+              header: "Status",
+              render: (a) => <Badge color={statusColor[a.status] || "default"}>{a.status}</Badge>,
+              slot: "chip",
+            },
+            {
+              header: "Komisi",
+              render: (a) => <span className="text-muted font-semibold">{a.komisi?.namaKomisi || "-"}</span>,
+            },
+            {
+              header: "Lokasi",
+              render: (a) => <span className="text-muted font-semibold">{a.lokasi}</span>,
+            },
+            {
+              header: "Harga",
+              render: (a) => <span className="brut-num break-words">{formatRp(a.hargaPerolehan)}</span>,
+              className: "!text-right",
+              headClassName: "!text-right",
+            },
+            {
+              header: "Jumlah",
+              render: (a) => <span className="brut-num">{a.jumlah}</span>,
+              className: "!text-center",
+              headClassName: "!text-center",
+            },
+          ]}
+        />
 
         <Pagination page={page} totalPages={totalPages} setPage={setPage} />
       </Card>

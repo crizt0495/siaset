@@ -48,9 +48,9 @@ export default function PenghapusanCreate() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5 sm:mb-6">
         <BackLink href="/penghapusan" />
-        <span className="text-sm font-bold text-muted uppercase tracking-wider">Penghapusan</span>
+        <span className="text-[0.7rem] sm:text-sm font-bold text-muted uppercase tracking-wider">Penghapusan</span>
       </div>
 
       <PageHeader
@@ -74,7 +74,7 @@ export default function PenghapusanCreate() {
             </>
           }
         >
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
             <Field label="Barang" required>
               <Select required value={form.barangId} onChange={set("barangId")}>
                 <option value="">Pilih Barang</option>

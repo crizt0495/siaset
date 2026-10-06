@@ -241,8 +241,8 @@ export default function DashboardPage() {
         title="Dashboard"
         desc="Ringkasan data aset GKJW Probolinggo"
         extra={
-          <span className="brut-sticker-help hidden sm:inline-flex">
-            <Clock className="w-4 h-4" strokeWidth={3} />
+          <span className="brut-sticker-help max-w-full">
+            <Clock className="w-4 h-4 shrink-0" strokeWidth={3} />
             {new Date().toLocaleDateString("id-ID", {
               weekday: "long",
               day: "numeric",
@@ -265,7 +265,7 @@ export default function DashboardPage() {
       />
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-6">
         <StatCard
           icon={Package}
           title="Total Aset"
@@ -297,7 +297,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick stats chips */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         {quickStats.map((item) => {
           const Icon = item.icon
           const face =
@@ -305,13 +305,15 @@ export default function DashboardPage() {
             item.color === "danger" ? "bg-danger text-white" :
             item.color === "warn" ? "bg-warn" : "bg-vibe text-white"
           return (
-            <div key={item.label} className={`brut-card p-4 flex items-center gap-3 ${face} rotate-[0.5deg] hover:rotate-0 transition-transform`}>
-              <span className="w-10 h-10 shrink-0 grid place-items-center border-[3px] border-ink bg-card text-ink -rotate-3">
-                <Icon className="w-5 h-5" strokeWidth={2.75} />
+            <div key={item.label} className={`brut-card p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3 ${face} rotate-[0.5deg] transition-transform`}>
+              <span className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 grid place-items-center border-[3px] border-ink bg-card text-ink -rotate-3">
+                <Icon className="w-4.5 h-4.5 sm:w-5 h-5" strokeWidth={2.75} />
               </span>
               <div className="min-w-0">
-                <p className="text-[0.62rem] font-bold uppercase tracking-widest opacity-70">{item.label}</p>
-                <p className="brut-num text-xl leading-tight">{item.value}</p>
+                <p className="text-[0.58rem] sm:text-[0.62rem] font-bold uppercase tracking-widest opacity-70 leading-tight">
+                  {item.label}
+                </p>
+                <p className="brut-num text-lg xs:text-xl sm:text-2xl leading-tight">{item.value}</p>
               </div>
             </div>
           )
@@ -320,7 +322,7 @@ export default function DashboardPage() {
 
       {/* Data validation banner */}
       <Card
-        className="mb-6"
+        className="mb-4 sm:mb-6"
         icon={dataValid ? CheckCircle : AlertTriangle}
         title="Verifikasi Data"
         sub="Seluruh angka dashboard lolos pemeriksaan konsistensi"
@@ -334,11 +336,11 @@ export default function DashboardPage() {
           </span>
         }
       >
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
           {checks.map((c) => (
             <div
               key={c.label}
-              className={`flex items-start gap-2.5 border-[3px] border-ink p-3.5 ${
+              className={`flex items-start gap-2.5 border-[3px] border-ink p-3 sm:p-3.5 ${
                 c.ok ? "bg-good/15" : "bg-danger/15"
               }`}
             >
@@ -406,7 +408,7 @@ export default function DashboardPage() {
                     <p className="font-mono text-xs text-muted">{barang.kodeBarang}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="hidden sm:inline text-xs font-bold text-muted">{barang.komisi?.namaKomisi || "-"}</span>
+                    <span className="hidden lg:inline text-xs font-bold text-muted">{barang.komisi?.namaKomisi || "-"}</span>
                     <Badge color={kondisiBadge[barang.kondisi]?.c || "default"}>{barang.kondisi}</Badge>
                     <Badge color={statusBadge[barang.status] || "default"}>{barang.status}</Badge>
                   </div>

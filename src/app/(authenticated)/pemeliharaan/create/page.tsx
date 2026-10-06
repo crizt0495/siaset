@@ -48,9 +48,9 @@ export default function PemeliharaanCreate() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5 sm:mb-6">
         <BackLink href="/pemeliharaan" />
-        <span className="text-sm font-bold text-muted uppercase tracking-wider">Pemeliharaan</span>
+        <span className="text-[0.7rem] sm:text-sm font-bold text-muted uppercase tracking-wider">Pemeliharaan</span>
       </div>
 
       <PageHeader
@@ -74,8 +74,8 @@ export default function PemeliharaanCreate() {
             </>
           }
         >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
+            <div className="space-y-4 sm:space-y-5">
               <Field label="Barang" required>
                 <Select required value={form.barangId} onChange={set("barangId")}>
                   <option value="">Pilih Barang</option>
@@ -86,7 +86,7 @@ export default function PemeliharaanCreate() {
                 <Input type="date" required value={form.tanggal} onChange={set("tanggal")} />
               </Field>
             </div>
-            <div className="space-y-5">
+            <div className="space-y-4 sm:space-y-5">
               <Field label="Biaya (Rp)" required>
                 <Input type="number" min="0" step="1000" required value={form.biaya} onChange={set("biaya")} />
               </Field>
