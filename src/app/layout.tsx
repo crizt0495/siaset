@@ -5,12 +5,14 @@ import "./globals.css"
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   variable: "--font-siaset",
+  display: "swap",
 })
 
 const archivoBlack = Archivo_Black({
   subsets: ["latin"],
   weight: "400",
   variable: "--font-siaset-display",
+  display: "swap",
 })
 
 export const metadata: Metadata = {

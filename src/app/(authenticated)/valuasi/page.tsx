@@ -6,7 +6,9 @@ import {
   FileDown, Printer, Filter, Landmark, PiggyBank, AlertTriangle,
 } from "lucide-react"
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js"
-import { Bar } from "react-chartjs-2"
+import dynamic from "next/dynamic"
+
+const Bar = dynamic(() => import("react-chartjs-2").then(m => ({ default: m.Bar })), { ssr: false })
 import {
   PageHeader, StatCard, Card, Label, Input, Select, Button, DataList,
   ListIndex, LoadingState, ErrorState, EmptyState, Badge,

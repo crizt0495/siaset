@@ -16,7 +16,10 @@ import {
   Legend,
   ArcElement,
 } from "chart.js"
-import { Bar, Doughnut } from "react-chartjs-2"
+import dynamic from "next/dynamic"
+
+const Bar = dynamic(() => import("react-chartjs-2").then(m => ({ default: m.Bar })), { ssr: false })
+const Doughnut = dynamic(() => import("react-chartjs-2").then(m => ({ default: m.Doughnut })), { ssr: false })
 import {
   PageHeader, Label, StatCard, Card, Select, Input,
   Button, LoadingState, ErrorState, EmptyState,

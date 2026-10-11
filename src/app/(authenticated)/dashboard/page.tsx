@@ -16,7 +16,10 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from "chart.js"
-import { Bar, Doughnut } from "react-chartjs-2"
+import dynamic from "next/dynamic"
+
+const Bar = dynamic(() => import("react-chartjs-2").then(m => ({ default: m.Bar })), { ssr: false })
+const Doughnut = dynamic(() => import("react-chartjs-2").then(m => ({ default: m.Doughnut })), { ssr: false })
 import { PageHeader, Marquee, StatCard, Card, Label, EmptyState, LoadingState, ErrorState, Badge } from "@/components/ui"
 import { formatRupiahRingkas } from "@/lib/format"
 
