@@ -1,9 +1,7 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import dynamic from "next/dynamic"
 import Providers from "@/components/Providers"
-
-const Sidebar = dynamic(() => import("@/components/Sidebar"), { ssr: false })
+import SidebarWrapper from "@/components/SidebarWrapper"
 
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
@@ -12,7 +10,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
   return (
     <Providers>
       <div className="min-h-dvh bg-paper">
-        <Sidebar>{children}</Sidebar>
+        <SidebarWrapper>{children}</SidebarWrapper>
       </div>
     </Providers>
   )
