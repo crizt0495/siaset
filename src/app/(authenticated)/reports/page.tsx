@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react"
 import {
   Package, ArrowRightLeft, TrendingUp, XCircle, Activity,
   Filter, BarChart3, Calendar, FileText, ClipboardList,
-  Repeat, Trash2, Wrench,
+  Repeat, Trash2, Wrench, Wallet,
 } from "lucide-react"
 import {
   Chart as ChartJS,
@@ -286,6 +286,13 @@ export default function ReportsPage() {
       icon: Trash2,
       href: "/reports/penghapusan",
       face: "danger" as const,
+    },
+    {
+      title: "Laporan Valuasi Aset",
+      desc: "Nilai buku, penyusutan & valuasi aset",
+      icon: Wallet,
+      href: "/valuasi",
+      face: "vibe" as const,
     },
     {
       title: "Laporan Pemeliharaan",

@@ -128,17 +128,18 @@ async function main() {
   await prisma.userRole.create({ data: { userId: admin2.id, roleId: komisiRole.id } });
 
   // Create Barang
+  // (hargaPerolehan = harga pasar riil Indonesia; masaManfaat mengikuti kelas aset)
   const barangData = [
-    { namaBarang: "Kursi Lipat", komisiId: komisi1.id, spesifikasi: "Kursi lipat plastik warna biru", kondisi: "Baik" as const, lokasi: "Gedung Serbaguna", sumberPerolehan: "Donasi Jemaat", hargaPerolehan: 150000, jumlah: 50 },
-    { namaBarang: "Meja Bulat", komisiId: komisi3.id, spesifikasi: "Meja bulat kayu diameter 120cm", kondisi: "Baik" as const, lokasi: "Ruang Pertemuan", sumberPerolehan: "Pembelian", hargaPerolehan: 500000, jumlah: 10 },
-    { namaBarang: "Proyektor", komisiId: komisi1.id, spesifikasi: "Epson EB-X51 3800 lumens", kondisi: "Baik" as const, lokasi: "Gereja Utama", sumberPerolehan: "Donasi", hargaPerolehan: 7500000, jumlah: 2 },
-    { namaBarang: "Sound System", komisiId: komisi4.id, spesifikasi: "TOA ZS-1030 100W", kondisi: "Baik" as const, lokasi: "Gereja Utama", sumberPerolehan: "Pembelian", hargaPerolehan: 15000000, jumlah: 1 },
-    { namaBarang: "Piano Digital", komisiId: komisi4.id, spesifikasi: "Yamaha P-45 88 keys", kondisi: "Baik" as const, lokasi: "Ruang Paduan Suara", sumberPerolehan: "Donasi", hargaPerolehan: 5000000, jumlah: 1 },
-    { namaBarang: "Mikrofon Wireless", komisiId: komisi4.id, spesifikasi: "Shure BLX24/SM58", kondisi: "Rusak" as const, lokasi: "Gereja Utama", sumberPerolehan: "Pembelian", hargaPerolehan: 2500000, jumlah: 4 },
-    { namaBarang: "Whiteboard", komisiId: komisi1.id, spesifikasi: "Papan tulis 120x240cm", kondisi: "Baik" as const, lokasi: "Ruang Kelas", sumberPerolehan: "Pembelian", hargaPerolehan: 350000, jumlah: 3 },
-    { namaBarang: "Komputer Desktop", komisiId: komisi3.id, spesifikasi: "Intel i5, 8GB RAM, 256GB SSD", kondisi: "Baik" as const, lokasi: "Kantor Sekretariat", sumberPerolehan: "Pembelian", hargaPerolehan: 6000000, jumlah: 2 },
-    { namaBarang: "AC Split", komisiId: komisi3.id, spesifikasi: "Daikin 1.5PK", kondisi: "Baik" as const, lokasi: "Kantor Sekretariat", sumberPerolehan: "Donasi", hargaPerolehan: 4500000, jumlah: 1 },
-    { namaBarang: "Kipas Angin", komisiId: komisi2.id, spesifikasi: "Kipas angin dinding 16 inch", kondisi: "Hilang" as const, lokasi: "Ruang IWIST", sumberPerolehan: "Pembelian", hargaPerolehan: 250000, jumlah: 0 },
+    { namaBarang: "Kursi Lipat", komisiId: komisi1.id, spesifikasi: "Kursi lipat plastik warna biru", kondisi: "Baik" as const, lokasi: "Gedung Serbaguna", sumberPerolehan: "Donasi Jemaat", hargaPerolehan: 185000, jumlah: 50, masaManfaat: 60, nilaiResidu: 0, metodePenyusutan: "GarisLurus" as const },
+    { namaBarang: "Meja Bulat", komisiId: komisi3.id, spesifikasi: "Meja bulat kayu diameter 120cm", kondisi: "Baik" as const, lokasi: "Ruang Pertemuan", sumberPerolehan: "Pembelian", hargaPerolehan: 750000, jumlah: 10, masaManfaat: 120, nilaiResidu: 0, metodePenyusutan: "GarisLurus" as const },
+    { namaBarang: "Proyektor Epson", komisiId: komisi1.id, spesifikasi: "Epson EB-X51 3800 lumens", kondisi: "Baik" as const, lokasi: "Gereja Utama", sumberPerolehan: "Donasi", hargaPerolehan: 8500000, jumlah: 2, masaManfaat: 36, nilaiResidu: 500000, metodePenyusutan: "SaldoMenurunGanda" as const },
+    { namaBarang: "Sound System", komisiId: komisi4.id, spesifikasi: "TOA ZS-1030 100W", kondisi: "Baik" as const, lokasi: "Gereja Utama", sumberPerolehan: "Pembelian", hargaPerolehan: 15000000, jumlah: 1, masaManfaat: 120, nilaiResidu: 0, metodePenyusutan: "GarisLurus" as const },
+    { namaBarang: "Piano Digital", komisiId: komisi4.id, spesifikasi: "Yamaha P-45 88 keys", kondisi: "Baik" as const, lokasi: "Ruang Paduan Suara", sumberPerolehan: "Donasi", hargaPerolehan: 5200000, jumlah: 1, masaManfaat: 120, nilaiResidu: 1000000, metodePenyusutan: "GarisLurus" as const },
+    { namaBarang: "Mikrofon Wireless", komisiId: komisi4.id, spesifikasi: "Shure BLX24/SM58", kondisi: "Rusak" as const, lokasi: "Gereja Utama", sumberPerolehan: "Pembelian", hargaPerolehan: 4200000, jumlah: 4, masaManfaat: 60, nilaiResidu: 0, metodePenyusutan: "GarisLurus" as const },
+    { namaBarang: "Whiteboard", komisiId: komisi1.id, spesifikasi: "Papan tulis 120x240cm", kondisi: "Baik" as const, lokasi: "Ruang Kelas", sumberPerolehan: "Pembelian", hargaPerolehan: 400000, jumlah: 3, masaManfaat: 60, nilaiResidu: 0, metodePenyusutan: "GarisLurus" as const },
+    { namaBarang: "Komputer Desktop", komisiId: komisi3.id, spesifikasi: "Intel i5, 8GB RAM, 256GB SSD", kondisi: "Baik" as const, lokasi: "Kantor Sekretariat", sumberPerolehan: "Pembelian", hargaPerolehan: 7800000, jumlah: 2, masaManfaat: 48, nilaiResidu: 500000, metodePenyusutan: "GarisLurus" as const },
+    { namaBarang: "AC Split", komisiId: komisi3.id, spesifikasi: "Daikin 1.5PK", kondisi: "Baik" as const, lokasi: "Kantor Sekretariat", sumberPerolehan: "Donasi", hargaPerolehan: 4600000, jumlah: 1, masaManfaat: 84, nilaiResidu: 0, metodePenyusutan: "GarisLurus" as const },
+    { namaBarang: "Kipas Angin", komisiId: komisi2.id, spesifikasi: "Kipas angin dinding 16 inch", kondisi: "Hilang" as const, lokasi: "Ruang IWIST", sumberPerolehan: "Pembelian", hargaPerolehan: 280000, jumlah: 0, masaManfaat: 48, nilaiResidu: 0, metodePenyusutan: "GarisLurus" as const },
   ];
 
   const createdBarang = [];
@@ -161,6 +162,9 @@ async function main() {
         hargaPerolehan: b.hargaPerolehan,
         status: "Aktif",
         jumlah: b.jumlah,
+        masaManfaat: b.masaManfaat,
+        nilaiResidu: b.nilaiResidu,
+        metodePenyusutan: b.metodePenyusutan,
       },
     });
     createdBarang.push(created);

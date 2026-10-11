@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
+function parseMasaManfaat(value: unknown, fallback: number): number {
+  if (value === undefined || value === null || value === "") return fallback
+  const n = Number(value)
+  if (!Number.isFinite(n)) return fallback
+  return Math.max(0, Math.floor(n))
+}
+
+function parseMetode(value: unknown): "GarisLurus" | "SaldoMenurunGanda" {
+  return value === "SaldoMenurunGanda" ? "SaldoMenurunGanda" : "GarisLurus"
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -74,6 +85,14 @@ export async function PUT(
         qrCode: body.qrCode !== undefined ? body.qrCode : existing.qrCode,
         status: body.status ?? existing.status,
         jumlah: body.jumlah ?? existing.jumlah,
+        masaManfaat:
+          body.masaManfaat !== undefined
+            ? parseMasaManfaat(body.masaManfaat, existing.masaManfaat)
+            : existing.masaManfaat,
+        nilaiResidu: body.nilaiResidu !== undefined ? body.nilaiResidu : existing.nilaiResidu,
+        metodePenyusutan: body.metodePenyusutan !== undefined
+          ? parseMetode(body.metodePenyusutan)
+          : existing.metodePenyusutan,
       },
       include: { komisi: true },
     })

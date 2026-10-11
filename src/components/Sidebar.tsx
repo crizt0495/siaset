@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback, type ElementType } from "react"
 import {
   LayoutDashboard, Package, ArrowRightLeft, Repeat, Trash2,
   Wrench, Users, Shield, Database, ChevronLeft,
-  ChevronRight, LogOut, Sun, Moon, ClipboardList, Boxes, LayoutGrid, X
+  ChevronRight, LogOut, Sun, Moon, ClipboardList, Boxes, LayoutGrid, X, Wallet
 } from "lucide-react"
 
 type MenuItem = { label: string; href: string; icon: ElementType; role?: string; tag?: string }
@@ -27,6 +27,7 @@ const menuItems: (MenuItem | MenuSection)[] = [
     items: [
       { label: "Penghapusan", href: "/penghapusan", icon: Trash2, tag: "05" },
       { label: "Pemeliharaan", href: "/pemeliharaan", icon: Wrench, tag: "06" },
+      { label: "Valuasi Aset", href: "/valuasi", icon: Wallet, tag: "11" },
       { label: "Laporan", href: "/reports", icon: ClipboardList, tag: "07" },
     ],
   },
@@ -50,6 +51,7 @@ const tabs: Tab[] = [
 ]
 
 const sheetItems: MenuItem[] = [
+  { label: "Valuasi Aset", href: "/valuasi", icon: Wallet, tag: "11" },
   { label: "Laporan", href: "/reports", icon: ClipboardList, tag: "07" },
   { label: "Penghapusan", href: "/penghapusan", icon: Trash2, tag: "05" },
   { label: "Pemeliharaan", href: "/pemeliharaan", icon: Wrench, tag: "06" },
@@ -65,6 +67,7 @@ const pageTitles: { path: string; title: string }[] = [
   { path: "/mutasi", title: "Mutasi" },
   { path: "/penghapusan", title: "Penghapusan" },
   { path: "/pemeliharaan", title: "Pemeliharaan" },
+  { path: "/valuasi", title: "Valuasi Aset" },
   { path: "/reports", title: "Laporan" },
   { path: "/komisi", title: "Komisi" },
   { path: "/pengguna", title: "Pengguna" },

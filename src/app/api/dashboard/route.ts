@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { hitungPenyusutan, ringkasValuasi } from "@/lib/penyusutan"
 
 export async function GET() {
   try {
@@ -62,6 +63,32 @@ export async function GET() {
       include: { user: { select: { namaLengkap: true } } },
     })
 
+    // Valuasi & penyusutan dihitung di server pada satu cut-off agar konsisten.
+    const barangValuasi = await prisma.barang.findMany({
+      select: {
+        hargaPerolehan: true,
+        jumlah: true,
+        nilaiResidu: true,
+        masaManfaat: true,
+        metodePenyusutan: true,
+        tanggalPerolehan: true,
+      },
+    })
+    const hasilValuasi = barangValuasi.map((b) =>
+      hitungPenyusutan(
+        {
+          hargaPerolehan: b.hargaPerolehan.toString(),
+          jumlah: b.jumlah,
+          nilaiResidu: b.nilaiResidu.toString(),
+          masaManfaat: b.masaManfaat,
+          metodePenyusutan: b.metodePenyusutan,
+          tanggalPerolehan: b.tanggalPerolehan,
+        },
+        new Date()
+      )
+    )
+    const valuasi = ringkasValuasi(hasilValuasi)
+
     const byKomisi = allKomisi.map((k) => ({
       id: k.id,
       namaKomisi: k.namaKomisi,
@@ -94,6 +121,14 @@ export async function GET() {
         byKondisi,
         tanpaKomisi,
         komisiDenganAset: byKomisi.filter((k) => k.count > 0).length,
+      },
+      valuasi: {
+        nilaiPerolehan: valuasi.nilaiPerolehan,
+        akumulasiPenyusutan: valuasi.akumulasiPenyusutan,
+        nilaiBuku: valuasi.nilaiBuku,
+        persenSusut: valuasi.persenSusut,
+        asetTersusut: valuasi.asetTersusut,
+        asetAktifDisusut: valuasi.asetAktifDisusut,
       },
       recentBarang,
       recentActivities,

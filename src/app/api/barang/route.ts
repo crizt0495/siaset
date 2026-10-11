@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
+function parseMasaManfaat(value: unknown, fallback: number): number {
+  if (value === undefined || value === null || value === "") return fallback
+  const n = Number(value)
+  if (!Number.isFinite(n)) return fallback
+  return Math.max(0, Math.floor(n))
+}
+
+function parseMetode(value: unknown): "GarisLurus" | "SaldoMenurunGanda" {
+  return value === "SaldoMenurunGanda" ? "SaldoMenurunGanda" : "GarisLurus"
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await auth()
@@ -32,7 +43,7 @@ export async function GET(request: NextRequest) {
     if (kondisi) where.kondisi = kondisi
     if (status) where.status = status
 
-    const [barang, total] = await Promise.all([
+    const [barang, total, semuaMatched] = await Promise.all([
       prisma.barang.findMany({
         where,
         include: { komisi: true },
@@ -41,7 +52,22 @@ export async function GET(request: NextRequest) {
         take: limit,
       }),
       prisma.barang.count({ where }),
+      prisma.barang.findMany({
+        where,
+        select: { hargaPerolehan: true, jumlah: true, status: true },
+      }),
     ])
+
+    const ringkasan = semuaMatched.reduce(
+      (acc, b) => {
+        acc.jumlahUnit += b.jumlah || 0
+        acc.totalNilai += Number(b.hargaPerolehan) * (b.jumlah || 0)
+        if (b.status === "Aktif") acc.aktif += 1
+        if (b.status === "Nonaktif") acc.nonaktif += 1
+        return acc
+      },
+      { jumlahUnit: 0, totalNilai: 0, aktif: 0, nonaktif: 0 }
+    )
 
     return NextResponse.json({
       data: barang,
@@ -50,6 +76,13 @@ export async function GET(request: NextRequest) {
         limit,
         total,
         totalPages: Math.ceil(total / limit),
+      },
+      summary: {
+        jumlahAset: total,
+        jumlahUnit: ringkasan.jumlahUnit,
+        totalNilai: ringkasan.totalNilai,
+        aktif: ringkasan.aktif,
+        nonaktif: ringkasan.nonaktif,
       },
     })
   } catch (error) {
@@ -101,6 +134,9 @@ export async function POST(request: NextRequest) {
         qrCode: body.qrCode || null,
         status: body.status || "Aktif",
         jumlah: body.jumlah || 0,
+        masaManfaat: parseMasaManfaat(body.masaManfaat, 60),
+        nilaiResidu: body.nilaiResidu ?? 0,
+        metodePenyusutan: parseMetode(body.metodePenyusutan),
       },
       include: { komisi: true },
     })

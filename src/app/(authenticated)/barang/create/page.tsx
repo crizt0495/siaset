@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Package } from "lucide-react"
+import { Package, Calculator } from "lucide-react"
 import {
   PageHeader, BackLink, ErrorBanner, FormCard, Field,
   Input, Select, Textarea, Button, ButtonLink,
 } from "@/components/ui"
+import { METODE_PENYUSUTAN_OPTIONS } from "@/lib/penyusutan"
 
 interface Komisi { id: string; namaKomisi: string }
 
@@ -18,6 +19,7 @@ export default function BarangCreate() {
   const [form, setForm] = useState({
     namaBarang: "", komisiId: "", jumlah: "1", tanggalPerolehan: "", sumberPerolehan: "",
     spesifikasi: "", kondisi: "Baik", lokasi: "", hargaPerolehan: "", status: "Aktif",
+    masaManfaat: "60", metodePenyusutan: "GarisLurus", nilaiResidu: "",
   })
 
   useEffect(() => {
@@ -38,6 +40,9 @@ export default function BarangCreate() {
           jumlah: parseInt(form.jumlah) || 0,
           hargaPerolehan: parseFloat(form.hargaPerolehan) || 0,
           tanggalPerolehan: form.tanggalPerolehan || new Date().toISOString(),
+          masaManfaat: parseInt(form.masaManfaat) || 60,
+          nilaiResidu: parseFloat(form.nilaiResidu) || 0,
+          metodePenyusutan: form.metodePenyusutan,
         }),
       })
       if (!res.ok) { const j = await res.json(); throw new Error(j.error || "Gagal menyimpan") }
@@ -118,6 +123,45 @@ export default function BarangCreate() {
                 </Select>
               </Field>
             </div>
+          </div>
+        </FormCard>
+
+        <FormCard
+          title="Penyusutan & Valuasi"
+          icon={Calculator}
+          className="mt-5 sm:mt-6"
+        >
+          <p className="text-xs sm:text-sm text-muted font-medium mb-4 sm:mb-5">
+            Isi agar sistem dapat menghitung nilai buku (penyusutan) aset secara otomatis.
+          </p>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
+            <Field label="Metode Penyusutan" hint={METODE_PENYUSUTAN_OPTIONS.find((m) => m.value === form.metodePenyusutan)?.hint}>
+              <Select value={form.metodePenyusutan} onChange={set("metodePenyusutan")}>
+                {METODE_PENYUSUTAN_OPTIONS.map((m) => (
+                  <option key={m.value} value={m.value}>{m.label}</option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Masa Manfaat (bulan)" required hint="Contoh: 60 bulan = 5 tahun">
+              <Input
+                type="number"
+                min="1"
+                step="1"
+                value={form.masaManfaat}
+                onChange={set("masaManfaat")}
+                placeholder="60"
+              />
+            </Field>
+            <Field label="Nilai Residu (Rp)" hint="Nilai sisa akhir masa manfaat (opsional, umumnya Rp 0)">
+              <Input
+                type="number"
+                min="0"
+                step="1000"
+                value={form.nilaiResidu}
+                onChange={set("nilaiResidu")}
+                placeholder="0"
+              />
+            </Field>
           </div>
         </FormCard>
       </form>

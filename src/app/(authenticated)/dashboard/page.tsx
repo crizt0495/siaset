@@ -12,10 +12,13 @@ import {
   Activity,
   Landmark,
   Package,
+  Wallet,
 } from "lucide-react"
+import Link from "next/link"
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from "chart.js"
 import { Bar, Doughnut } from "react-chartjs-2"
 import { PageHeader, Marquee, StatCard, Card, Label, EmptyState, LoadingState, ErrorState, Badge } from "@/components/ui"
+import { formatRupiahRingkas } from "@/lib/format"
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement)
 
@@ -45,6 +48,14 @@ interface DashboardData {
     }[]
     tanpaKomisi: number
     komisiDenganAset: number
+  }
+  valuasi: {
+    nilaiPerolehan: number
+    akumulasiPenyusutan: number
+    nilaiBuku: number
+    persenSusut: number
+    asetTersusut: number
+    asetAktifDisusut: number
   }
   recentBarang: {
     id: string
@@ -104,7 +115,7 @@ export default function DashboardPage() {
   if (loading) return <LoadingState text="Memuat dashboard..." />
   if (error || !data) return <ErrorState message={error || "Data tidak tersedia"} onRetry={() => window.location.reload()} />
 
-  const { stats, distribution, recentBarang, recentActivities } = data
+  const { stats, distribution, valuasi, recentBarang, recentActivities } = data
 
   const quickStats = [
     { label: "Dipinjam", value: stats.peminjamanAktif, icon: ArrowRightLeft, color: "warn" as const },
@@ -319,6 +330,38 @@ export default function DashboardPage() {
           )
         })}
       </div>
+
+      {/* Valuasi aset */}
+      <Card
+        className="mb-4 sm:mb-6" 
+        icon={Wallet}
+        title="Valuasi Aset"
+        sub="Nilai perolehan, penyusutan, dan nilai buku seluruh inventaris"
+        actions={
+          <Link href="/valuasi" className="brut-btn brut-btn-sm brut-btn-primary">
+            Buka Valuasi →
+          </Link>
+        }
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4">
+          <div className="brut-card-pad !shadow-[3px_3px_0_0_var(--shadow)] !p-3.5 sm:!p-4 bg-primary text-white">
+            <p className="text-[0.6rem] font-bold uppercase tracking-widest opacity-80">Nilai Perolehan</p>
+            <p className="brut-num text-xl sm:text-2xl mt-1.5">{formatRupiahRingkas(valuasi.nilaiPerolehan)}</p>
+          </div>
+          <div className="brut-card-pad !shadow-[3px_3px_0_0_var(--shadow)] !p-3.5 sm:!p-4 bg-warn">
+            <p className="text-[0.6rem] font-bold uppercase tracking-widest opacity-80">Akumulasi Penyusutan</p>
+            <p className="brut-num text-xl sm:text-2xl mt-1.5">{formatRupiahRingkas(valuasi.akumulasiPenyusutan)}</p>
+            <p className="text-[0.68rem] font-semibold mt-1 opacity-75">{valuasi.persenSusut.toFixed(1)}% tersusut</p>
+          </div>
+          <div className="brut-card-pad !shadow-[3px_3px_0_0_var(--shadow)] !p-3.5 sm:!p-4 bg-good">
+            <p className="text-[0.6rem] font-bold uppercase tracking-widest opacity-80">Nilai Buku</p>
+            <p className="brut-num text-xl sm:text-2xl mt-1.5">{formatRupiahRingkas(valuasi.nilaiBuku)}</p>
+            <p className="text-[0.68rem] font-semibold mt-1 opacity-75">
+              {valuasi.asetTersusut} habis · {valuasi.asetAktifDisusut} aktif disusut
+            </p>
+          </div>
+        </div>
+      </Card>
 
       {/* Data validation banner */}
       <Card

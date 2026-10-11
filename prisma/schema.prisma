@@ -23,6 +23,14 @@ enum StatusPeminjaman {
   Dikembalikan
 }
 
+/// Metode penyusutan yang dipakai untuk menghitung nilai buku aset.
+/// - GarisLurus: penyusutan merata setiap bulan
+/// - SaldoMenurunGanda: penyusutan dipercepat (double declining balance)
+enum MetodePenyusutan {
+  GarisLurus
+  SaldoMenurunGanda
+}
+
 model User {
   id          String   @id @default(cuid())
   namaLengkap String   @map("nama_lengkap")
@@ -88,6 +96,9 @@ model Barang {
   qrCode           String?       @map("qr_code")
   status           StatusBarang  @default(Aktif)
   jumlah           Int           @default(0)
+  masaManfaat      Int           @default(60) @map("masa_manfaat")
+  nilaiResidu      Decimal       @default(0) @map("nilai_residu") @db.Decimal(15, 2)
+  metodePenyusutan MetodePenyusutan @default(GarisLurus) @map("metode_penyusutan")
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @updatedAt @map("updated_at")
 

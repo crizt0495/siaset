@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
-import { Package, History } from "lucide-react"
+import { Package, History, Calculator } from "lucide-react"
 import {
   PageHeader, BackLink, LoadingState, EmptyState, Card, Label,
   Badge, ButtonLink, DetailRow as Row,
 } from "@/components/ui"
+import { hitungPenyusutan, METODE_PENYUSUTAN_LABEL } from "@/lib/penyusutan"
+import { formatMasaManfaat } from "@/lib/format"
 
 const kondisiColor: Record<string, "green" | "red" | "yellow" | "default"> = {
   Baik: "green", Rusak: "red", Hilang: "yellow",
@@ -28,6 +30,19 @@ export default function BarangDetail() {
   if (!data) return <EmptyState text="Data tidak ditemukan" />
 
   const formatRupiah = (v: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(v)
+
+  const penyusutan =
+    data.hargaPerolehan != null
+      ? hitungPenyusutan({
+          hargaPerolehan: Number(data.hargaPerolehan),
+          jumlah: data.jumlah,
+          nilaiResidu: Number(data.nilaiResidu || 0),
+          masaManfaat: data.masaManfaat ?? 60,
+          metodePenyusutan: data.metodePenyusutan,
+          tanggalPerolehan: data.tanggalPerolehan,
+        })
+      : null
+  const haystack = penyusutan ? Math.max(0, Math.min(100, penyusutan.persenSusut)) : 0
 
   return (
     <div>
@@ -65,10 +80,58 @@ export default function BarangDetail() {
             <Row label="Tanggal Perolehan" value={new Date(data.tanggalPerolehan).toLocaleDateString("id-ID")} />
             <Row label="Sumber Perolehan" value={data.sumberPerolehan || "-"} />
             <Row label="Harga Perolehan" value={formatRupiah(Number(data.hargaPerolehan))} />
+            <Row label="Total Perolehan" value={<span className="brut-num text-good">{formatRupiah(Number(data.hargaPerolehan) * (data.jumlah || 1))}</span>} />
             <Row label="Spesifikasi" value={data.spesifikasi || "-"} />
           </div>
         </div>
       </Card>
+
+      {penyusutan && (
+        <Card
+          title="Penyusutan & Nilai Buku"
+          sub={METODE_PENYUSUTAN_LABEL[penyusutan.metodePenyusutan] || penyusutan.metodePenyusutan}
+          icon={Calculator}
+          className="mb-4 sm:mb-6"
+          actions={
+            <span className={`brut-sticker-help !px-3 !py-1 ${penyusutan.selesai ? "!bg-danger !text-white" : "!bg-good"}`}>
+              {penyusutan.selesai ? "Habis Tersusut" : "Aktif Disusut"}
+            </span>
+          }
+        >
+          <div className="flex items-center gap-2 sm:gap-3 mb-4">
+            <div className="h-4 flex-1 border-2 border-ink bg-paper2 overflow-hidden">
+              <div
+                className={`h-full ${haystack >= 100 ? "bg-danger" : haystack >= 60 ? "bg-warn" : "bg-good"}`}
+                style={{ width: `${haystack}%` }}
+              />
+            </div>
+            <span className="brut-num text-sm sm:text-base">{haystack.toFixed(1)}%</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
+            <div>
+              <Row label="Masa Manfaat" value={formatMasaManfaat(penyusutan.masaManfaat)} />
+              <Row label="Umur Aset" value={`${formatMasaManfaat(penyusutan.umurBulan)} (${penyusutan.umurBulan} bln)`} />
+              <Row label="Sisa Manfaat" value={formatMasaManfaat(penyusutan.sisaBulan)} />
+              <Row label="Penyusutan / Bulan" value={formatRupiah(penyusutan.penyusutanPerBulan * penyusutan.jumlahUnit)} />
+              <Row label="Penyusutan / Tahun" value={formatRupiah(penyusutan.penyusutanPerTahun * penyusutan.jumlahUnit)} />
+            </div>
+            <div>
+              <Row label="Nilai Perolehan" value={formatRupiah(penyusutan.nilaiPerolehanTotal)} />
+              <Row label="Nilai Residu" value={formatRupiah(penyusutan.nilaiResiduTotal)} />
+              <Row label="Akumulasi Penyusutan" value={formatRupiah(penyusutan.akumulasiPenyusutanTotal)} />
+              <Row
+                label="Nilai Buku"
+                value={
+                  <span className="brut-num text-lg text-good">
+                    {formatRupiah(penyusutan.nilaiBukuTotal)}
+                    <span className="block text-xs text-muted font-semibold">{formatRupiah(penyusutan.nilaiBuku)} / unit</span>
+                  </span>
+                }
+              />
+            </div>
+          </div>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <Card

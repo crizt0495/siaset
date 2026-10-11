@@ -17,15 +17,16 @@ Sistem Informasi Inventaris Aset untuk GKJW Jemaat Probolinggo. Dibangun ulang d
 ## ✨ Features
 
 ### Core Modules
-- **Dashboard** - Statistik, chart aset per komisi/kondisi, aktivitas terbaru
+- **Dashboard** - Statistik, chart aset per komisi/kondisi, valuasi & nilai buku, aktivitas terbaru
 - **Barang & Aset** - CRUD lengkap, QR code, foto, print kartu aset
+- **Valuasi Aset** - Perhitungan otomatis penyusutan & nilai buku (metode garis lurus atau saldo menurun ganda), ringkasan per komisi/kondisi, export CSV
 - **Peminjaman** - Pinjam/Kembalikan dengan manajemen stok otomatis
 - **Mutasi** - Perpindahan lokasi aset dengan update otomatis
 - **Penghapusan** - Pencatatan aset hilang/rusak
 - **Pemeliharaan** - Tracking biaya perawatan
 - **Komisi** - Manajemen komisi/departemen
 - **Pengguna** - Manajemen user dengan RBAC (Superadmin only)
-- **Laporan** - Filter, chart, export data
+- **Laporan** - Filter, chart, export data (CSV/Excel)
 - **Backup & Restore** - Buat backup SQL, download file, dan restore database (Superadmin only)
 
 ### Roles & Permissions
@@ -90,13 +91,18 @@ Backup hanya dapat dibuat/diunduh/dihapus/direstore oleh pengguna dengan role **
 Key models:
 - **User** - namaLengkap, username (auth), komisiId, password, active
 - **Komisi** - namaKomisi, keterangan
-- **Barang** - kodeBarang, namaBarang, komisiId, spesifikasi, kondisi, lokasi, tanggalPerolehan, sumberPerolehan, hargaPerolehan, fotoBarang, qrCode, status, jumlah
+- **Barang** - kodeBarang, namaBarang, komisiId, spesifikasi, kondisi, lokasi, tanggalPerolehan, sumberPerolehan, hargaPerolehan, masaManfaat, nilaiResidu, metodePenyusutan, fotoBarang, qrCode, status, jumlah
 - **Peminjaman** - barangId, jumlahDipinjam, peminjam, tanggalPinjam, tanggalKembali, status (Dipinjam/Dikembalikan)
 - **Mutasi** - barangId, lokasiAsal, lokasiTujuan, tanggalMutasi
 - **Penghapusan** - barangId, tanggalPenghapusan, alasan
 - **Pemeliharaan** - barangId, tanggal, biaya, keterangan
 - **Aktivitas** - userId, aktivitas, waktu, ipAddress, userAgent, meta
 - **Role/Permission** - Spatie-style RBAC
+
+> **Penyusutan:** `Barang` menyimpan `masaManfaat` (bulan), `nilaiResidu`, dan
+> `metodePenyusutan` (`GarisLurus` / `SaldoMenurunGanda`). Nilai buku dihitung
+> otomatis oleh `src/lib/penyusutan.ts` sejak `tanggalPerolehan`. Karena field baru,
+> jalankan `npx prisma db push` setelah meng-update agar kolom ditambahkan.
 
 ## 🚀 Deploy to Vercel
 

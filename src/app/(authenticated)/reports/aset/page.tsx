@@ -6,9 +6,12 @@ import {
   PageHeader, BackLink, Badge, Card, StatCard, Select, DataList,
   ListIndex, Pagination, Button,
 } from "@/components/ui"
+import { formatRupiah, formatTanggal } from "@/lib/format"
+import { exportCsv } from "@/lib/export"
 
 interface Aset {
   id: string; kodeBarang: string; namaBarang: string; kondisi: string; status: string; lokasi: string; jumlah: number; hargaPerolehan: number
+  spesifikasi?: string | null; tanggalPerolehan: string
   komisi?: { namaKomisi: string } | null
 }
 interface Komisi { id: string; namaKomisi: string }
@@ -42,11 +45,12 @@ export default function LaporanAset() {
     const items = json.data || []
     setData(items)
     setTotalPages(json.pagination?.totalPages || 1)
+    const sum = json.summary || {}
     setStats({
-      total: json.pagination?.total || items.length,
-      aktif: items.filter((a: Aset) => a.status === "Aktif").length,
-      nonaktif: items.filter((a: Aset) => a.status === "Nonaktif").length,
-      totalHarga: items.reduce((sum: number, a: Aset) => sum + (a.hargaPerolehan || 0) * (a.jumlah || 0), 0),
+      total: sum.jumlahAset ?? items.length,
+      aktif: sum.aktif ?? 0,
+      nonaktif: sum.nonaktif ?? 0,
+      totalHarga: sum.totalNilai ?? 0,
     })
     setLoading(false)
   }, [page, filterKomisi, filterKondisi, filterStatus])
@@ -56,7 +60,33 @@ export default function LaporanAset() {
     fetch("/api/komisi").then(r => r.json()).then(j => setKomisiList(j.data || []))
   }, [])
 
-  const formatRp = (n: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n)
+  const handleExport = async () => {
+    const params = new URLSearchParams({ page: "1", limit: "10000" })
+    if (filterKomisi) params.set("komisiId", filterKomisi)
+    if (filterKondisi) params.set("kondisi", filterKondisi)
+    if (filterStatus) params.set("status", filterStatus)
+    try {
+      const res = await fetch(`/api/barang?${params}`)
+      const json = await res.json()
+      const items: Aset[] = json.data || []
+      if (items.length === 0) return
+      exportCsv(
+        "laporan-aset",
+        [
+          "Kode", "Nama Barang", "Komisi", "Kondisi", "Status", "Lokasi",
+          "Jumlah", "Tanggal Perolehan", "Harga Perolehan", "Total Nilai",
+        ],
+        items.map((a) => [
+          a.kodeBarang, a.namaBarang, a.komisi?.namaKomisi || "-", a.kondisi, a.status, a.lokasi,
+          a.jumlah, formatTanggal(a.tanggalPerolehan), a.hargaPerolehan, (a.hargaPerolehan || 0) * (a.jumlah || 1),
+        ])
+      )
+    } catch {
+      // abaikan error export
+    }
+  }
+
+  const formatRp = formatRupiah
 
   return (
     <div>
@@ -70,8 +100,8 @@ export default function LaporanAset() {
         title="Laporan Aset"
         desc="Data seluruh aset dan inventaris"
       >
-        <Button onClick={() => alert("Coming soon")} variant="good" className="w-full sm:w-auto">
-          <FileDown className="w-4 h-4" strokeWidth={3} /> Export
+        <Button onClick={handleExport} variant="good" className="w-full sm:w-auto">
+          <FileDown className="w-4 h-4" strokeWidth={3} /> Export CSV
         </Button>
       </PageHeader>
 
