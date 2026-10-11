@@ -5,7 +5,7 @@ import {
   Package, ArrowRightLeft, TrendingUp, XCircle, Activity,
   Filter, BarChart3, Calendar, FileText, ClipboardList,
   Repeat, Trash2, Wrench, Wallet, AlertTriangle, CheckCircle,
-} from "lucide-react"
+} from "@/components/icons"
 import dynamic from "next/dynamic"
 import {
   PageHeader, Label, StatCard, Card, Select, Input,

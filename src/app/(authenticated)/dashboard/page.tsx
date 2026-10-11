@@ -13,7 +13,7 @@ import {
   Landmark,
   Package,
   Wallet,
-} from "lucide-react"
+} from "@/components/icons"
 import Link from "next/link"
 import dynamic from "next/dynamic"
 import { PageHeader, Marquee, StatCard, Card, Label, EmptyState, LoadingState, ErrorState, Badge } from "@/components/ui"

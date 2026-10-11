@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react"
 import {
   Wallet, Coins, TrendingDown, TrendingUp, Package, Search,
   FileDown, Printer, Filter, Landmark, PiggyBank, AlertTriangle,
-} from "lucide-react"
+} from "@/components/icons"
 import dynamic from "next/dynamic"
 import {
   PageHeader, StatCard, Card, Label, Input, Select, Button,

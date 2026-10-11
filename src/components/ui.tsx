@@ -2,7 +2,7 @@ import Link from "next/link"
 import {
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
   Plus, X, ArrowLeft, Inbox,
-} from "lucide-react"
+} from "@/components/icons"
 import type { ElementType, ReactNode, ButtonHTMLAttributes, InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from "react"
 
 /* ============================================================
