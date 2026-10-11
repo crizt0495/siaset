@@ -1,7 +1,9 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import dynamic from "next/dynamic"
 import Providers from "@/components/Providers"
-import Sidebar from "@/components/Sidebar"
+
+const Sidebar = dynamic(() => import("@/components/Sidebar"), { ssr: false })
 
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
