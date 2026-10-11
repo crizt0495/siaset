@@ -16,12 +16,11 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import dynamic from "next/dynamic"
-
-const Bar = dynamic(() => import("react-chartjs-2").then(m => ({ default: m.Bar })), { ssr: false })
-const Doughnut = dynamic(() => import("react-chartjs-2").then(m => ({ default: m.Doughnut })), { ssr: false })
 import { PageHeader, Marquee, StatCard, Card, Label, EmptyState, LoadingState, ErrorState, Badge } from "@/components/ui"
 import { formatRupiahRingkas } from "@/lib/format"
 
+const SvgBarChart = dynamic(() => import("@/components/ChartSection").then(m => m.SvgBarChart), { ssr: false })
+const SvgDoughnutChart = dynamic(() => import("@/components/ChartSection").then(m => m.SvgDoughnutChart), { ssr: false })
 
 interface DashboardData {
   stats: {
@@ -97,76 +96,6 @@ const statusBadge: Record<string, "blue" | "gray"> = {
   Nonaktif: "gray",
 }
 
-
-// Lightweight SVG Bar Chart
-function SvgBarChart({ data, options, empty }: { data: any; options?: any; empty?: boolean }) {
-  if (empty || !data?.labels?.length) return <EmptyState text="Belum ada data komisi" icon={Landmark} />
-  const max = Math.max(...data.datasets[0].data)
-  const colors = ["#2b59ff", "#23c677", "#ffc829", "#8b5cf6", "#ff4d3d", "#0cc0df", "#ff7a1a", "#16161a"]
-  return (
-    <div className="flex items-end gap-2 h-full px-2">
-      {data.labels.map((label: string, i: number) => {
-        const val = data.datasets[0].data[i]
-        const h = max > 0 ? (val / max) * 100 : 0
-        return (
-          <div key={label} className="flex-1 flex flex-col items-center gap-1 min-w-0">
-            <span className="text-xs font-bold text-muted">{val}</span>
-            <div className="w-full max-w-[42px] border-[3px] border-ink" style={{ height: `${h}%`, backgroundColor: colors[i % colors.length] }} />
-            <span className="text-[0.6rem] font-bold text-muted truncate w-full text-center">{label}</span>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-// Lightweight SVG Doughnut Chart
-function SvgDoughnutChart({ data, options, empty }: { data: any; options?: any; empty?: boolean }) {
-  if (empty || !data?.labels?.length) return <EmptyState text="Belum ada data kondisi" icon={Activity} />
-  const total = data.datasets[0].data.reduce((a: number, b: number) => a + b, 0)
-  const colors = data.labels.map((l: string) => l === 'Baik' ? '#23c677' : l === 'Rusak' ? '#ff4d3d' : '#ffc829')
-  let cumulative = 0
-  const segments = data.datasets[0].data.map((val: number, i: number) => {
-    const pct = total > 0 ? (val / total) * 100 : 0
-    const start = cumulative
-    cumulative += pct
-    return { pct, color: colors[i], label: data.labels[i], val, start }
-  })
-  // SVG arc path
-  const R = 40, C = 50
-  const polar = (angle: number) => ({ x: C + R * Math.cos(angle * Math.PI / 180), y: C + R * Math.sin(angle * Math.PI / 180) })
-  const arc = (start: number, end: number) => {
-    const s = polar(start), e = polar(end)
-    const large = end - start > 180 ? 1 : 0
-    return `M ${C} ${C} L ${s.x} ${s.y} A ${R} ${R} 0 ${large} 1 ${e.x} ${e.y} Z`
-  }
-  return (
-    <div className="flex flex-col items-center gap-2 h-full justify-center">
-      <svg viewBox="0 0 100 100" className="w-32 h-32">
-        {segments.map((seg: any, i: number) => seg.pct > 0 ? (
-          <path key={i} d={arc(segments.slice(0, i).reduce((a: number, s: any) => a + s.pct, 0), segments.slice(0, i + 1).reduce((a: number, s: any) => a + s.pct, 0))} fill={seg.color} stroke="#16161a" strokeWidth="1" />
-        ) : null)}
-      </svg>
-      <div className="flex gap-3 flex-wrap justify-center">
-        {data.labels.map((l: string, i: number) => (
-          <span key={l} className="flex items-center gap-1 text-xs font-bold text-muted uppercase">
-            <span className="w-3 h-3 border-2 border-ink" style={{ backgroundColor: colors[i] }} />
-            {l} ({total > 0 ? ((data.datasets[0].data[i] / total) * 100).toFixed(0) : 0}%)
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// Lazy chart wrappers (now using SVG, no dynamic import needed)
-function BarChart({ data, options, empty }: { data: any; options?: any; empty?: boolean }) {
-  return <SvgBarChart data={data} options={options} empty={empty} />
-}
-function DoughnutChart({ data, options, empty }: { data: any; options?: any; empty?: boolean }) {
-  return <SvgDoughnutChart data={data} options={options} empty={empty} />
-}
-
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -217,35 +146,6 @@ export default function DashboardPage() {
   ]
   const dataValid = checks.every((c) => c.ok)
 
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      title: { display: false },
-      tooltip: {
-        backgroundColor: "#16161a",
-        titleFont: { family: "'Space Grotesk', sans-serif", size: 13, weight: 700 as const },
-        bodyFont: { family: "'Space Grotesk', sans-serif", size: 12, weight: 600 as const },
-        padding: 12,
-        displayColors: false,
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: { stepSize: 1, font: { size: 12, weight: 700 as const }, color: "#6b6557" },
-        grid: { color: "rgba(107,101,87,0.18)", lineWidth: 1 },
-        border: { color: "#16161a", width: 3 },
-      },
-      x: {
-        ticks: { font: { size: 11, weight: 600 as const }, color: "#6b6557", maxRotation: 45 },
-        grid: { display: false },
-        border: { color: "#16161a", width: 3 },
-      },
-    },
-  }
-
   const komisiDenganAset = distribution.byKomisi.filter((k) => k.count > 0)
 
   const barChartData = {
@@ -254,19 +154,8 @@ export default function DashboardPage() {
       {
         label: "Jumlah Aset",
         data: komisiDenganAset.map((k) => k.count),
-        backgroundColor: ["#2b59ff", "#23c677", "#ffc829", "#8b5cf6", "#ff4d3d", "#0cc0df", "#ff7a1a", "#16161a"],
-        borderColor: "#16161a",
-        borderWidth: 3,
-        borderRadius: 0,
-        maxBarThickness: 42,
       },
     ],
-  }
-
-  const kondisiColorMap: Record<string, string> = {
-    Baik: "#23c677",
-    Rusak: "#ff4d3d",
-    Hilang: "#ffc829",
   }
 
   const doughnutChartData = {
@@ -274,44 +163,8 @@ export default function DashboardPage() {
     datasets: [
       {
         data: distribution.byKondisi.map((k) => k.count),
-        backgroundColor: distribution.byKondisi.map((k) => kondisiColorMap[k.kondisi] || "#6b6557"),
-        borderColor: "#16161a",
-        borderWidth: 3,
-        hoverOffset: 12,
       },
     ],
-  }
-
-  const doughnutOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    cutout: "62%",
-    plugins: {
-      legend: {
-        position: "bottom" as const,
-        labels: {
-          padding: 16,
-          usePointStyle: true,
-          pointStyle: "rect" as const,
-          font: { family: "'Space Grotesk', sans-serif", size: 12, weight: 700 as const },
-          color: "#6b6557",
-        },
-      },
-      tooltip: {
-        backgroundColor: "#16161a",
-        titleFont: { family: "'Space Grotesk', sans-serif", size: 13, weight: 700 as const },
-        bodyFont: { family: "'Space Grotesk', sans-serif", size: 12, weight: 600 as const },
-        padding: 12,
-        displayColors: false,
-        callbacks: {
-          label: function (context: any) {
-            const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0)
-            const pct = total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0
-            return ` ${context.label}: ${context.raw} (${pct}%)`
-          },
-        },
-      },
-    },
   }
 
   const totalKondisi = distribution.byKondisi.reduce((sum, k) => sum + k.count, 0)
@@ -346,7 +199,6 @@ export default function DashboardPage() {
         ]}
       />
 
-      {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-6">
         <StatCard
           icon={Package}
@@ -378,7 +230,6 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Quick stats chips */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         {quickStats.map((item) => {
           const Icon = item.icon
@@ -402,9 +253,8 @@ export default function DashboardPage() {
         })}
       </div>
 
-      {/* Valuasi aset */}
       <Card
-        className="mb-4 sm:mb-6" 
+        className="mb-4 sm:mb-6"
         icon={Wallet}
         title="Valuasi Aset"
         sub="Nilai perolehan, penyusutan, dan nilai buku seluruh inventaris"
@@ -434,7 +284,6 @@ export default function DashboardPage() {
         </div>
       </Card>
 
-      {/* Data validation banner */}
       <Card
         className="mb-4 sm:mb-6"
         icon={dataValid ? CheckCircle : AlertTriangle}
@@ -480,20 +329,20 @@ export default function DashboardPage() {
           actions={<span className="brut-sticker-help !px-3 !py-1 !text-[0.62rem]">{stats.totalBarang} Aset</span>}
         >
           <div className="h-72">
-            <BarChart data={barChartData} options={chartOptions} empty={komisiDenganAset.length === 0} />
+            <SvgBarChart data={barChartData} empty={komisiDenganAset.length === 0} />
           </div>
         </Card>
 
         <Card title="Aset per Kondisi" sub="Status kondisi seluruh aset" icon={Activity}>
           <div className="h-64">
-            <DoughnutChart data={doughnutChartData} options={doughnutOptions} empty={distribution.byKondisi.length === 0} />
+            <SvgDoughnutChart data={doughnutChartData} empty={distribution.byKondisi.length === 0} />
           </div>
           <div className="mt-3 flex justify-center gap-3 flex-wrap">
             {distribution.byKondisi.map((k) => (
               <span key={k.kondisi} className="flex items-center gap-1.5 text-xs font-bold text-muted uppercase">
                 <span
                   className="w-3 h-3 border-2 border-ink"
-                  style={{ backgroundColor: kondisiColorMap[k.kondisi] }}
+                  style={{ backgroundColor: k.kondisi === "Baik" ? "#23c677" : k.kondisi === "Rusak" ? "#ff4d3d" : "#ffc829" }}
                 />
                 {k.kondisi} ({totalKondisi > 0 ? ((k.count / totalKondisi) * 100).toFixed(0) : 0}%)
               </span>
@@ -502,7 +351,6 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Bottom row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
         <Card title="Aset Terbaru" sub="5 aset yang baru ditambahkan" icon={Package}>
           {recentBarang.length > 0 ? (

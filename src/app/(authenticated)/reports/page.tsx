@@ -4,36 +4,16 @@ import { useEffect, useState, useCallback } from "react"
 import {
   Package, ArrowRightLeft, TrendingUp, XCircle, Activity,
   Filter, BarChart3, Calendar, FileText, ClipboardList,
-  Repeat, Trash2, Wrench, Wallet,
+  Repeat, Trash2, Wrench, Wallet, AlertTriangle, CheckCircle,
 } from "lucide-react"
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-} from "chart.js"
 import dynamic from "next/dynamic"
-
-const Bar = dynamic(() => import("react-chartjs-2").then(m => ({ default: m.Bar })), { ssr: false })
-const Doughnut = dynamic(() => import("react-chartjs-2").then(m => ({ default: m.Doughnut })), { ssr: false })
 import {
   PageHeader, Label, StatCard, Card, Select, Input,
   Button, LoadingState, ErrorState, EmptyState,
 } from "@/components/ui"
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement
-)
+const SvgBarChart = dynamic(() => import("@/components/ChartSection").then(m => m.SvgBarChart), { ssr: false })
+const SvgDoughnutChart = dynamic(() => import("@/components/ChartSection").then(m => m.SvgDoughnutChart), { ssr: false })
 
 interface ReportsData {
   summary: {
@@ -47,171 +27,58 @@ interface ReportsData {
     totalMutasi: number
     totalPenghapusan: number
     totalPemeliharaan: number
-    biayaPemeliharaan: number
   }
   distribution: {
     byKomisi: { id: string; namaKomisi: string; count: number }[]
     byKondisi: { kondisi: string; count: number }[]
-    byStatus: { status: string; count: number }[]
   }
-  monthlyPeminjaman: { month: string; count: number }[]
-}
-
-interface KomisiOption {
-  id: string
-  namaKomisi: string
-}
-
-function formatRupiah(n: number) {
-  return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n)
-}
-
-function formatMonth(monthStr: string) {
-  const [year, month] = monthStr.split("-")
-  const date = new Date(Number(year), Number(month) - 1)
-  return date.toLocaleDateString("id-ID", { month: "short", year: "2-digit" })
-}
-
-
-// Lazy chart wrappers
-function BarChart({ data, options, empty }: { data: any; options: any; empty?: boolean }) {
-  const [Comp, setComp] = useState<any>(null)
-  useEffect(() => {
-    import("react-chartjs-2").then(m => setComp(() => m.Bar))
-  }, [])
-  if (empty) return <div className="h-full flex items-center justify-center text-muted font-bold">Tidak ada data</div>
-  if (!Comp) return <div className="h-full flex items-center justify-center text-muted font-bold">Memuat grafik...</div>
-  return <Comp data={data} options={options} />
-}
-
-function DoughnutChart({ data, options, empty }: { data: any; options: any; empty?: boolean }) {
-  const [Comp, setComp] = useState<any>(null)
-  useEffect(() => {
-    import("react-chartjs-2").then(m => setComp(() => m.Doughnut))
-  }, [])
-  if (empty) return <div className="h-full flex items-center justify-center text-muted font-bold">Tidak ada data</div>
-  if (!Comp) return <div className="h-full flex items-center justify-center text-muted font-bold">Memuat grafik...</div>
-  return <Comp data={data} options={options} />
+  biayaPemeliharaan: number
 }
 
 export default function ReportsPage() {
   const [data, setData] = useState<ReportsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
-  const [komisiList, setKomisiList] = useState<KomisiOption[]>([])
-  const [filterKomisi, setFilterKomisi] = useState("")
   const [filterKondisi, setFilterKondisi] = useState("")
-  const [filterStatus, setFilterStatus] = useState("")
-  const [dateFrom, setDateFrom] = useState("")
-  const [dateTo, setDateTo] = useState("")
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(() => {
     setLoading(true)
     setError(null)
-    try {
-      const params = new URLSearchParams()
-      if (filterKomisi) params.set("komisiId", filterKomisi)
-      if (filterKondisi) params.set("kondisi", filterKondisi)
-      if (filterStatus) params.set("status", filterStatus)
-      if (dateFrom) params.set("dateFrom", dateFrom)
-      if (dateTo) params.set("dateTo", dateTo)
-
-      const res = await fetch(`/api/reports?${params.toString()}`)
-      if (!res.ok) throw new Error("Gagal memuat data laporan")
-      const json = await res.json()
-      setData(json)
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Terjadi kesalahan")
-    } finally {
-      setLoading(false)
-    }
-  }, [filterKomisi, filterKondisi, filterStatus, dateFrom, dateTo])
-
-  useEffect(() => {
-    fetch("/api/komisi")
-      .then((res) => (res.ok ? res.json() : []))
-      .then((json) => setKomisiList(Array.isArray(json) ? json : json.data || []))
-      .catch(() => {})
-  }, [])
+    const params = new URLSearchParams()
+    if (filterKondisi) params.set("kondisi", filterKondisi)
+    fetch(`/api/reports?${params}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Gagal memuat laporan")
+        return res.json()
+      })
+      .then((json) => setData(json))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [filterKondisi])
 
   useEffect(() => {
     fetchData()
   }, [fetchData])
 
-  function resetFilters() {
-    setFilterKomisi("")
-    setFilterKondisi("")
-    setFilterStatus("")
-    setDateFrom("")
-    setDateTo("")
-  }
+  if (loading) return <LoadingState text="Memuat laporan..." />
+  if (error || !data) return <ErrorState message={error || "Data tidak tersedia"} onRetry={() => window.location.reload()} />
 
-  if (loading && !data) return <LoadingState text="Memuat data laporan..." />
+  const { summary, distribution, biayaPemeliharaan } = data
 
-  if (error && !data) return (
-    <ErrorState message={error} onRetry={() => fetchData()} />
-  )
-
-  if (!data) return null
-
-  const { summary, distribution, monthlyPeminjaman } = data
-
-  const barChartData = {
-    labels: distribution.byKomisi.map((k) => k.namaKomisi),
-    datasets: [
-      {
-        label: "Jumlah Aset",
-        data: distribution.byKomisi.map((k) => k.count),
-        backgroundColor: [
-          "#2b59ff",
-          "#23c677",
-          "#ffc829",
-          "#8b5cf6",
-          "#ff4d3d",
-          "#14b8a6",
-          "#f97316",
-          "#6366f1",
-        ],
-        borderColor: "#16161a",
-        borderWidth: 3,
-        borderRadius: 0,
-      },
-    ],
-  }
-
-  const barChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      title: { display: false },
-      tooltip: {
-        backgroundColor: "#16161a",
-        titleFont: { size: 13, family: "Space Grotesk", weight: "bold" as const },
-        bodyFont: { size: 12, family: "Space Grotesk" },
-        padding: 10,
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: { stepSize: 1, font: { size: 12, family: "Space Grotesk" }, color: "#6b6b6b" },
-        grid: { color: "rgba(22,22,26,0.12)" },
-        border: { color: "#16161a" },
-      },
-      x: {
-        ticks: { font: { size: 11, family: "Space Grotesk" }, color: "#6b6b6b", maxRotation: 45 },
-        grid: { display: false },
-        border: { color: "#16161a" },
-      },
-    },
-  }
-
-  const kondisiColorMap: Record<string, string> = {
+  const kondisiColors: Record<string, string> = {
     Baik: "#23c677",
     Rusak: "#ff4d3d",
     Hilang: "#ffc829",
+  }
+
+  const barChartData = {
+    labels: distribution.byKomisi.filter(k => k.count > 0).map((k) => k.namaKomisi),
+    datasets: [
+      {
+        label: "Jumlah Aset",
+        data: distribution.byKomisi.filter(k => k.count > 0).map((k) => k.count),
+      },
+    ],
   }
 
   const doughnutChartData = {
@@ -219,223 +86,112 @@ export default function ReportsPage() {
     datasets: [
       {
         data: distribution.byKondisi.map((k) => k.count),
-        backgroundColor: distribution.byKondisi.map(
-          (k) => kondisiColorMap[k.kondisi] || "#9ca3af"
-        ),
-        borderColor: "#16161a",
-        borderWidth: 4,
-        hoverOffset: 8,
       },
     ],
   }
 
-  const doughnutOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    cutout: "58%",
-    plugins: {
-      legend: {
-        position: "bottom" as const,
-        labels: {
-          padding: 16,
-          usePointStyle: true,
-          pointStyle: "rectRounded" as const,
-          font: { size: 13, family: "Space Grotesk", weight: "bold" as const },
-          color: "#6b6b6b",
-        },
-      },
-      tooltip: {
-        backgroundColor: "#16161a",
-        titleFont: { size: 13, family: "Space Grotesk", weight: "bold" as const },
-        bodyFont: { size: 12, family: "Space Grotesk" },
-        padding: 10,
-        callbacks: {
-          label: function (context: any) {
-            const total = context.dataset.data.reduce(
-              (a: number, b: number) => a + b,
-              0
-            )
-            const pct =
-              total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0
-            return ` ${context.label}: ${context.raw} (${pct}%)`
-          },
-        },
-      },
-    },
-  }
+  const totalKondisi = distribution.byKondisi.reduce((sum, k) => sum + k.count, 0)
 
-  const totalKondisi = distribution.byKondisi.reduce(
-    (sum, k) => sum + k.count,
-    0
-  )
-
-  const monthlyChartData = {
-    labels: monthlyPeminjaman.map((m) => formatMonth(m.month)),
-    datasets: [
-      {
-        label: "Peminjaman",
-        data: monthlyPeminjaman.map((m) => m.count),
-        backgroundColor: "#ffc829",
-        borderColor: "#16161a",
-        borderWidth: 3,
-        borderRadius: 0,
-      },
-    ],
-  }
-
-  const subReports = [
-    {
-      title: "Laporan Aset",
-      desc: "Data seluruh aset dan inventaris",
-      icon: ClipboardList,
-      href: "/reports/aset",
-      face: "primary" as const,
-    },
-    {
-      title: "Laporan Peminjaman",
-      desc: "Riwayat peminjaman aset",
-      icon: FileText,
-      href: "/reports/peminjaman",
-      face: "warn" as const,
-    },
-    {
-      title: "Laporan Mutasi",
-      desc: "Perpindahan lokasi aset",
-      icon: Repeat,
-      href: "/reports/mutasi",
-      face: "vibe" as const,
-    },
-    {
-      title: "Laporan Penghapusan",
-      desc: "Aset yang telah dihapus",
-      icon: Trash2,
-      href: "/reports/penghapusan",
-      face: "danger" as const,
-    },
-    {
-      title: "Laporan Valuasi Aset",
-      desc: "Nilai buku, penyusutan & valuasi aset",
-      icon: Wallet,
-      href: "/valuasi",
-      face: "vibe" as const,
-    },
-    {
-      title: "Laporan Pemeliharaan",
-      desc: "Riwayat perawatan aset",
-      icon: Wrench,
-      href: "/reports/pemeliharaan",
-      face: "good" as const,
-    },
-  ]
+  const kondisiFiltered = filterKondisi
+    ? distribution.byKondisi.filter((k) => k.kondisi === filterKondisi)
+    : distribution.byKondisi
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div>
       <PageHeader
-        index="07"
+        index="02"
         title="Laporan"
-        desc="Ringkasan dan analisis data aset GKJW Probolinggo"
-        extra={
-          <Label icon={Calendar}>
-            {new Date().toLocaleDateString("id-ID", {
-              weekday: "short",
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })}
-          </Label>
-        }
+        desc="Statistik dan laporan aset GKJW Probolinggo"
       />
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-6">
         <StatCard icon={Package} title="Total Aset" value={summary.totalBarang} sub={`${summary.barangAktif} aktif`} face="primary" />
         <StatCard icon={ArrowRightLeft} title="Peminjaman" value={summary.totalPeminjaman} sub={`${summary.peminjamanAktif} aktif`} face="warn" />
-        <StatCard icon={TrendingUp} title="Mutasi" value={summary.totalMutasi} sub="total riwayat" face="vibe" />
-        <StatCard icon={XCircle} title="Penghapusan" value={summary.totalPenghapusan} sub="total dihapus" face="danger" />
-        <StatCard icon={Activity} title="Pemeliharaan" value={summary.totalPemeliharaan} sub={formatRupiah(summary.biayaPemeliharaan)} face="good" />
+        <StatCard icon={TrendingUp} title="Mutasi" value={summary.totalMutasi} sub="total mutasi" face="vibe" />
+        <StatCard icon={Activity} title="Pemeliharaan" value={summary.totalPemeliharaan} sub="total pemeliharaan" face="good" />
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div className="brut-card p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3 bg-danger rotate-[0.5deg]">
+          <span className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 grid place-items-center border-[3px] border-ink bg-card text-ink -rotate-3">
+            <XCircle className="w-4.5 h-4.5 sm:w-5 h-5" strokeWidth={2.75} />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[0.58rem] sm:text-[0.62rem] font-bold uppercase tracking-widest opacity-70 leading-tight">Rusak</p>
+            <p className="brut-num text-lg xs:text-xl sm:text-2xl leading-tight">{summary.barangRusak}</p>
+          </div>
+        </div>
+        <div className="brut-card p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3 bg-warn rotate-[-0.5deg]">
+          <span className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 grid place-items-center border-[3px] border-ink bg-card text-ink rotate-3">
+            <AlertTriangle className="w-4.5 h-4.5 sm:w-5 h-5" strokeWidth={2.75} />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[0.58rem] sm:text-[0.62rem] font-bold uppercase tracking-widest opacity-70 leading-tight">Hilang</p>
+            <p className="brut-num text-lg xs:text-xl sm:text-2xl leading-tight">{summary.barangHilang}</p>
+          </div>
+        </div>
+        <div className="brut-card p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3 bg-good rotate-[0.5deg]">
+          <span className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 grid place-items-center border-[3px] border-ink bg-card text-ink -rotate-3">
+            <CheckCircle className="w-4.5 h-4.5 sm:w-5 h-5" strokeWidth={2.75} />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[0.58rem] sm:text-[0.62rem] font-bold uppercase tracking-widest opacity-70 leading-tight">Aktif</p>
+            <p className="brut-num text-lg xs:text-xl sm:text-2xl leading-tight">{summary.peminjamanAktif}</p>
+          </div>
+        </div>
+        <div className="brut-card p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3 bg-vibe text-white rotate-[-0.5deg]">
+          <span className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 grid place-items-center border-[3px] border-ink bg-card text-ink rotate-3">
+            <Wallet className="w-4.5 h-4.5 sm:w-5 h-5" strokeWidth={2.75} />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[0.58rem] sm:text-[0.62rem] font-bold uppercase tracking-widest opacity-70 leading-tight">Biaya</p>
+            <p className="brut-num text-lg xs:text-xl sm:text-2xl leading-tight">Rp {biayaPemeliharaan.toLocaleString("id-ID")}</p>
+          </div>
+        </div>
       </div>
 
       <Card
-        title="Filter Laporan"
-        sub="Persempit rentang data laporan"
+        className="mb-4 sm:mb-6"
         icon={Filter}
+        title="Filter Laporan"
+        sub="Saring laporan berdasarkan kondisi aset"
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-          <div>
-            <Label>Komisi</Label>
-            <Select value={filterKomisi} onChange={(e) => setFilterKomisi(e.target.value)} className="mt-2">
-              <option value="">Semua Komisi</option>
-              {komisiList.map((k) => (
-                <option key={k.id} value={k.id}>{k.namaKomisi}</option>
-              ))}
-            </Select>
-          </div>
-          <div>
+        <div className="flex flex-wrap gap-3 items-end">
+          <div className="flex-1 min-w-[200px]">
             <Label>Kondisi</Label>
-            <Select value={filterKondisi} onChange={(e) => setFilterKondisi(e.target.value)} className="mt-2">
+            <Select value={filterKondisi} onChange={(e) => setFilterKondisi(e.target.value)}>
               <option value="">Semua Kondisi</option>
               <option value="Baik">Baik</option>
               <option value="Rusak">Rusak</option>
               <option value="Hilang">Hilang</option>
             </Select>
           </div>
-          <div>
-            <Label>Status</Label>
-            <Select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="mt-2">
-              <option value="">Semua Status</option>
-              <option value="Aktif">Aktif</option>
-              <option value="Nonaktif">Nonaktif</option>
-            </Select>
-          </div>
-          <div>
-            <Label>Dari Tanggal</Label>
-            <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="mt-2" />
-          </div>
-          <div>
-            <Label>Sampai Tanggal</Label>
-            <div className="flex gap-2 mt-2">
-              <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-              <Button onClick={resetFilters} variant="dark" className="shrink-0">Reset</Button>
-            </div>
-          </div>
+          <Button onClick={fetchData}>Terapkan</Button>
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6 mb-3 sm:mb-6">
         <Card
           title="Aset per Komisi"
           sub="Distribusi aset berdasarkan komisi"
-          icon={BarChart3}
+          icon={Package}
           className="lg:col-span-2"
-          actions={<Label color="blue">{distribution.byKomisi.length} Komisi</Label>}
         >
-          <div className="h-64 sm:h-72">
-            {distribution.byKomisi.length > 0 ? (
-              <BarChart data={barChartData} options={barChartOptions} />
-            ) : (
-              <EmptyState text="Belum ada data komisi" />
-            )}
+          <div className="h-72">
+            <SvgBarChart data={barChartData} empty={distribution.byKomisi.filter(k => k.count > 0).length === 0} />
           </div>
         </Card>
 
-        <Card
-          title="Aset per Kondisi"
-          sub="Status kondisi seluruh aset"
-          icon={BarChart3}
-          actions={<Label color="yellow">{totalKondisi} Total</Label>}
-        >
-          <div className="h-64 sm:h-72">
-            {distribution.byKondisi.length > 0 ? (
-              <DoughnutChart data={doughnutChartData} options={doughnutOptions} empty={false} />
-            ) : (
-              <EmptyState text="Belum ada data kondisi" />
-            )}
+        <Card title="Aset per Kondisi" sub="Status kondisi seluruh aset" icon={Activity}>
+          <div className="h-64">
+            <SvgDoughnutChart data={doughnutChartData} empty={distribution.byKondisi.length === 0} />
           </div>
-          <div className="mt-3 flex justify-center gap-4 text-xs font-bold text-muted">
-            {distribution.byKondisi.map((k) => (
-              <span key={k.kondisi} className="flex items-center gap-1.5">
+          <div className="mt-3 flex justify-center gap-3 flex-wrap">
+            {kondisiFiltered.map((k) => (
+              <span key={k.kondisi} className="flex items-center gap-1.5 text-xs font-bold text-muted uppercase">
                 <span
                   className="w-3 h-3 border-2 border-ink"
-                  style={{ backgroundColor: kondisiColorMap[k.kondisi] || "#9ca3af" }}
+                  style={{ backgroundColor: kondisiColors[k.kondisi] || "#6b6557" }}
                 />
                 {k.kondisi} ({totalKondisi > 0 ? ((k.count / totalKondisi) * 100).toFixed(0) : 0}%)
               </span>
@@ -444,49 +200,44 @@ export default function ReportsPage() {
         </Card>
       </div>
 
-      <Card
-        title="Aktivitas Peminjaman Bulanan"
-        sub="Jumlah peminjaman per bulan (12 bulan terakhir)"
-        icon={BarChart3}
-        actions={<Label color="yellow">{summary.totalPeminjaman} Total</Label>}
-      >
-        <div className="h-64 sm:h-72">
-          {monthlyPeminjaman.length > 0 ? (
-            <BarChart data={monthlyChartData} options={barChartOptions} />
-          ) : (
-            <EmptyState text="Belum ada data peminjaman" />
-          )}
-        </div>
-      </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
+        <Card title="Ringkasan Peminjaman" sub="Statistik peminjaman aset" icon={ArrowRightLeft}>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center border-b-2 border-ink pb-2">
+              <span className="font-bold text-sm">Total Peminjaman</span>
+              <span className="brut-num text-lg">{summary.totalPeminjaman}</span>
+            </div>
+            <div className="flex justify-between items-center border-b-2 border-ink pb-2">
+              <span className="font-bold text-sm">Sedang Dipinjam</span>
+              <span className="brut-num text-lg text-warn">{summary.peminjamanAktif}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="font-bold text-sm">Sudah Dikembalikan</span>
+              <span className="brut-num text-lg text-good">{summary.peminjamanDikembalikan}</span>
+            </div>
+          </div>
+        </Card>
 
-      <div className="space-y-4">
-        <div className="flex items-center gap-3">
-          <span className="brut-sticker w-10 h-10 text-base">
-            <FileText className="w-5 h-5" strokeWidth={3} />
-          </span>
-          <h2 className="brut-title brut-h2">Laporan Detail</h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-5">
-          {subReports.map((report) => {
-            const Icon = report.icon
-            return (
-              <a
-                key={report.title}
-                href={report.href}
-                className="brut-card p-4 sm:p-5 bg-card hover:bg-paper2 transition-colors group"
-              >
-                <span className="brut-sticker w-11 h-11 text-lg mb-3 sm:mb-4 rotate-3 group-hover:-rotate-3 transition-transform">
-                  <Icon className="w-5 h-5" strokeWidth={3} />
-                </span>
-                <h3 className="brut-title brut-h3 break-words">{report.title}</h3>
-                <p className="text-xs text-muted font-semibold mt-1">{report.desc}</p>
-                <p className="mt-3 text-xs font-bold uppercase tracking-wider text-primary">
-                  Lihat detail →
-                </p>
-              </a>
-            )
-          })}
-        </div>
+        <Card title="Ringkasan Aset" sub="Statistik kondisi aset" icon={Package}>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center border-b-2 border-ink pb-2">
+              <span className="font-bold text-sm">Total Aset</span>
+              <span className="brut-num text-lg">{summary.totalBarang}</span>
+            </div>
+            <div className="flex justify-between items-center border-b-2 border-ink pb-2">
+              <span className="font-bold text-sm">Kondisi Baik</span>
+              <span className="brut-num text-lg text-good">{summary.barangAktif}</span>
+            </div>
+            <div className="flex justify-between items-center border-b-2 border-ink pb-2">
+              <span className="font-bold text-sm">Kondisi Rusak</span>
+              <span className="brut-num text-lg text-danger">{summary.barangRusak}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="font-bold text-sm">Kondisi Hilang</span>
+              <span className="brut-num text-lg text-warn">{summary.barangHilang}</span>
+            </div>
+          </div>
+        </Card>
       </div>
     </div>
   )
