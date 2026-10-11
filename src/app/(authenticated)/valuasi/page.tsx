@@ -5,7 +5,6 @@ import {
   Wallet, Coins, TrendingDown, TrendingUp, Package, Search,
   FileDown, Printer, Filter, Landmark, PiggyBank, AlertTriangle,
 } from "lucide-react"
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js"
 import dynamic from "next/dynamic"
 
 const Bar = dynamic(() => import("react-chartjs-2").then(m => ({ default: m.Bar })), { ssr: false })
@@ -16,7 +15,6 @@ import {
 import { formatRupiah, formatRupiahRingkas, formatTanggal, formatMasaManfaat, formatAngka } from "@/lib/format"
 import { exportCsv } from "@/lib/export"
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 interface ValuasiItem {
   id: string
@@ -97,15 +95,30 @@ function ProgressBar({ value }: { value: number }) {
 }
 
 
-// Lazy chart wrapper
-function BarChart({ data, options, empty }: { data: any; options: any; empty?: boolean }) {
-  const [Comp, setComp] = useState<any>(null)
-  useEffect(() => {
-    import("react-chartjs-2").then(m => setComp(() => m.Bar))
-  }, [])
-  if (empty) return <div className="h-full flex items-center justify-center text-muted font-bold">Tidak ada data</div>
-  if (!Comp) return <div className="h-full flex items-center justify-center text-muted font-bold">Memuat grafik...</div>
-  return <Comp data={data} options={options} />
+// Lightweight SVG Bar Chart
+function SvgBarChart({ data, options, empty }: { data: any; options?: any; empty?: boolean }) {
+  if (empty || !data?.labels?.length) return <div className="h-full flex items-center justify-center text-muted font-bold">Tidak ada data</div>
+  const max = Math.max(...data.datasets[0].data)
+  const colors = ["#2b59ff", "#23c677", "#ffc829", "#8b5cf6", "#ff4d3d", "#0cc0df", "#ff7a1a", "#16161a"]
+  return (
+    <div className="flex items-end gap-2 h-full px-2">
+      {data.labels.map((label: string, i: number) => {
+        const val = data.datasets[0].data[i]
+        const h = max > 0 ? (val / max) * 100 : 0
+        return (
+          <div key={label} className="flex-1 flex flex-col items-center gap-1 min-w-0">
+            <span className="text-xs font-bold text-muted">{val}</span>
+            <div className="w-full max-w-[42px] border-[3px] border-ink" style={{ height: `${h}%`, backgroundColor: colors[i % colors.length] }} />
+            <span className="text-[0.6rem] font-bold text-muted truncate w-full text-center">{label}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function BarChart({ data, options, empty }: { data: any; options?: any; empty?: boolean }) {
+  return <SvgBarChart data={data} options={options} empty={empty} />
 }
 
 export default function ValuasiPage() {
