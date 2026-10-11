@@ -74,7 +74,7 @@ function formatMonth(monthStr: string) {
 
 
 // Lazy chart wrappers
-function BarChart({ data, options, empty }: { data: any; options: any; empty: boolean }) {
+function BarChart({ data, options, empty }: { data: any; options: any; empty?: boolean }) {
   const [Comp, setComp] = useState<any>(null)
   useEffect(() => {
     import("react-chartjs-2").then(m => setComp(() => m.Bar))
@@ -84,7 +84,7 @@ function BarChart({ data, options, empty }: { data: any; options: any; empty: bo
   return <Comp data={data} options={options} />
 }
 
-function DoughnutChart({ data, options, empty }: { data: any; options: any; empty: boolean }) {
+function DoughnutChart({ data, options, empty }: { data: any; options: any; empty?: boolean }) {
   const [Comp, setComp] = useState<any>(null)
   useEffect(() => {
     import("react-chartjs-2").then(m => setComp(() => m.Doughnut))

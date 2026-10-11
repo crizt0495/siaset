@@ -98,7 +98,7 @@ function ProgressBar({ value }: { value: number }) {
 
 
 // Lazy chart wrapper
-function BarChart({ data, options, empty }: { data: any; options: any; empty: boolean }) {
+function BarChart({ data, options, empty }: { data: any; options: any; empty?: boolean }) {
   const [Comp, setComp] = useState<any>(null)
   useEffect(() => {
     import("react-chartjs-2").then(m => setComp(() => m.Bar))
