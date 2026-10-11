@@ -99,6 +99,28 @@ const statusBadge: Record<string, "blue" | "gray"> = {
   Nonaktif: "gray",
 }
 
+
+// Lazy chart wrappers to avoid blocking initial render
+function BarChart({ data, options, empty }: { data: any; options: any; empty: boolean }) {
+  const [Comp, setComp] = useState<any>(null)
+  useEffect(() => {
+    import("react-chartjs-2").then(m => setComp(() => m.Bar))
+  }, [])
+  if (empty) return <EmptyState text="Belum ada data komisi" icon={Landmark} />
+  if (!Comp) return <div className="h-full flex items-center justify-center text-muted font-bold">Memuat grafik...</div>
+  return <Comp data={data} options={options} />
+}
+
+function DoughnutChart({ data, options, empty }: { data: any; options: any; empty: boolean }) {
+  const [Comp, setComp] = useState<any>(null)
+  useEffect(() => {
+    import("react-chartjs-2").then(m => setComp(() => m.Doughnut))
+  }, [])
+  if (empty) return <EmptyState text="Belum ada data kondisi" icon={Activity} />
+  if (!Comp) return <div className="h-full flex items-center justify-center text-muted font-bold">Memuat grafik...</div>
+  return <Comp data={data} options={options} />
+}
+
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -412,21 +434,13 @@ export default function DashboardPage() {
           actions={<span className="brut-sticker-help !px-3 !py-1 !text-[0.62rem]">{stats.totalBarang} Aset</span>}
         >
           <div className="h-72">
-            {komisiDenganAset.length > 0 ? (
-              <Bar data={barChartData} options={chartOptions} />
-            ) : (
-              <EmptyState text="Belum ada data komisi" icon={Landmark} />
-            )}
+            <BarChart data={barChartData} options={chartOptions} empty={komisiDenganAset.length === 0} />
           </div>
         </Card>
 
         <Card title="Aset per Kondisi" sub="Status kondisi seluruh aset" icon={Activity}>
           <div className="h-64">
-            {distribution.byKondisi.length > 0 ? (
-              <Doughnut data={doughnutChartData} options={doughnutOptions} />
-            ) : (
-              <EmptyState text="Belum ada data kondisi" icon={Activity} />
-            )}
+            <DoughnutChart data={doughnutChartData} options={doughnutOptions} empty={distribution.byKondisi.length === 0} />
           </div>
           <div className="mt-3 flex justify-center gap-3 flex-wrap">
             {distribution.byKondisi.map((k) => (

@@ -96,6 +96,18 @@ function ProgressBar({ value }: { value: number }) {
   )
 }
 
+
+// Lazy chart wrapper
+function BarChart({ data, options, empty }: { data: any; options: any; empty: boolean }) {
+  const [Comp, setComp] = useState<any>(null)
+  useEffect(() => {
+    import("react-chartjs-2").then(m => setComp(() => m.Bar))
+  }, [])
+  if (empty) return <div className="h-full flex items-center justify-center text-muted font-bold">Tidak ada data</div>
+  if (!Comp) return <div className="h-full flex items-center justify-center text-muted font-bold">Memuat grafik...</div>
+  return <Comp data={data} options={options} />
+}
+
 export default function ValuasiPage() {
   const [data, setData] = useState<ValuasiData | null>(null)
   const [komisiList, setKomisiList] = useState<KomisiOption[]>([])
@@ -316,7 +328,7 @@ export default function ValuasiPage() {
       >
         <div className="h-72 sm:h-80">
           {perKomisi.length > 0 ? (
-            <Bar data={chartData} options={chartOptions} />
+            <BarChart data={chartData} options={chartOptions} empty={false} />
           ) : (
             <EmptyState text="Belum ada data valuasi" icon={Wallet} />
           )}

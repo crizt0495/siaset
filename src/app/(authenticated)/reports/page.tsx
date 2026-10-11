@@ -72,6 +72,28 @@ function formatMonth(monthStr: string) {
   return date.toLocaleDateString("id-ID", { month: "short", year: "2-digit" })
 }
 
+
+// Lazy chart wrappers
+function BarChart({ data, options, empty }: { data: any; options: any; empty: boolean }) {
+  const [Comp, setComp] = useState<any>(null)
+  useEffect(() => {
+    import("react-chartjs-2").then(m => setComp(() => m.Bar))
+  }, [])
+  if (empty) return <div className="h-full flex items-center justify-center text-muted font-bold">Tidak ada data</div>
+  if (!Comp) return <div className="h-full flex items-center justify-center text-muted font-bold">Memuat grafik...</div>
+  return <Comp data={data} options={options} />
+}
+
+function DoughnutChart({ data, options, empty }: { data: any; options: any; empty: boolean }) {
+  const [Comp, setComp] = useState<any>(null)
+  useEffect(() => {
+    import("react-chartjs-2").then(m => setComp(() => m.Doughnut))
+  }, [])
+  if (empty) return <div className="h-full flex items-center justify-center text-muted font-bold">Tidak ada data</div>
+  if (!Comp) return <div className="h-full flex items-center justify-center text-muted font-bold">Memuat grafik...</div>
+  return <Comp data={data} options={options} />
+}
+
 export default function ReportsPage() {
   const [data, setData] = useState<ReportsData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -388,7 +410,7 @@ export default function ReportsPage() {
         >
           <div className="h-64 sm:h-72">
             {distribution.byKomisi.length > 0 ? (
-              <Bar data={barChartData} options={barChartOptions} />
+              <BarChart data={barChartData} options={barChartOptions} />
             ) : (
               <EmptyState text="Belum ada data komisi" />
             )}
@@ -403,7 +425,7 @@ export default function ReportsPage() {
         >
           <div className="h-64 sm:h-72">
             {distribution.byKondisi.length > 0 ? (
-              <Doughnut data={doughnutChartData} options={doughnutOptions} />
+              <DoughnutChart data={doughnutChartData} options={doughnutOptions} empty={false} />
             ) : (
               <EmptyState text="Belum ada data kondisi" />
             )}
@@ -430,7 +452,7 @@ export default function ReportsPage() {
       >
         <div className="h-64 sm:h-72">
           {monthlyPeminjaman.length > 0 ? (
-            <Bar data={monthlyChartData} options={barChartOptions} />
+            <BarChart data={monthlyChartData} options={barChartOptions} />
           ) : (
             <EmptyState text="Belum ada data peminjaman" />
           )}
