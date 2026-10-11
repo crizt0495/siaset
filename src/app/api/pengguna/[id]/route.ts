@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
+import { forbidden, isSuperadmin } from "@/lib/authz"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 
@@ -12,6 +13,7 @@ export async function GET(
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+    if (!isSuperadmin(session.user)) return forbidden()
 
     const { id } = await params
     const user = await prisma.user.findUnique({
@@ -51,6 +53,7 @@ export async function PUT(
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+    if (!isSuperadmin(session.user)) return forbidden()
 
     const { id } = await params
     const body = await request.json()
@@ -143,6 +146,7 @@ export async function DELETE(
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+    if (!isSuperadmin(session.user)) return forbidden()
 
     const { id } = await params
     const existing = await prisma.user.findUnique({ where: { id } })

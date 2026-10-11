@@ -8,8 +8,11 @@ import {
   ButtonLink, Button, ConfirmModal, DetailRow as Row,
 } from "@/components/ui"
 
+import { useAuthz } from "@/hooks/useAuthz"
+
 export default function PenghapusanDetail() {
   const params = useParams()
+  const { can } = useAuthz()
   const router = useRouter()
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -42,8 +45,12 @@ export default function PenghapusanDetail() {
         desc="Pengeluaran aset dari inventaris"
         extra={<Label color="red">05 · Penghapusan</Label>}
       >
-        <ButtonLink href={`/penghapusan/${data.id}/edit`} variant="warn">Edit</ButtonLink>
-        <Button variant="danger" onClick={() => setShowDelete(true)}>Hapus</Button>
+        {can("edit_penghapusan") && (
+          <ButtonLink href={`/penghapusan/${data.id}/edit`} variant="warn">Edit</ButtonLink>
+        )}
+        {can("delete_penghapusan") && (
+          <Button variant="danger" onClick={() => setShowDelete(true)}>Hapus</Button>
+        )}
       </PageHeader>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">

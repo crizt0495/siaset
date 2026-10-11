@@ -8,12 +8,15 @@ import {
   Pagination, ConfirmModal, Input, Label,
 } from "@/components/ui"
 
+import { useAuthz } from "@/hooks/useAuthz"
+
 interface Penghapusan {
   id: string; tanggalPenghapusan: string; alasan: string; keterangan: string
   barang?: { id: string; namaBarang: string; kodeBarang: string } | null
 }
 
 export default function PenghapusanList() {
+  const { can } = useAuthz()
   const [data, setData] = useState<Penghapusan[]>([])
   const [search, setSearch] = useState("")
   const [page, setPage] = useState(1)
@@ -49,7 +52,7 @@ export default function PenghapusanList() {
         desc="Pencatatan aset hilang / rusak / dihapus"
         extra={<Label color="red">05 · Manajemen Lainnya</Label>}
       >
-        <AddButton href="/penghapusan/create">Tambah Penghapusan</AddButton>
+        {can("create_penghapusan") && <AddButton href="/penghapusan/create">Tambah Penghapusan</AddButton>}
       </PageHeader>
 
       <Card noPad>
@@ -108,8 +111,12 @@ export default function PenghapusanList() {
               render: (p) => (
                 <ListActions>
                   <Link href={`/penghapusan/${p.id}`} className="brut-iconbtn brut-iconbtn-primary" title="Detail" aria-label="Detail"><Eye className="w-4 h-4" strokeWidth={2.75} /></Link>
+                  {can("edit_penghapusan") && (
                   <Link href={`/penghapusan/${p.id}/edit`} className="brut-iconbtn brut-iconbtn-warn" title="Edit" aria-label="Edit"><Pencil className="w-4 h-4" strokeWidth={2.75} /></Link>
-                  <button onClick={() => setDeleteId(p.id)} className="brut-iconbtn brut-iconbtn-danger" title="Hapus" aria-label="Hapus"><Trash2 className="w-4 h-4" strokeWidth={2.75} /></button>
+                  )}
+                  {can("delete_penghapusan") && (
+                    <button onClick={() => setDeleteId(p.id)} className="brut-iconbtn brut-iconbtn-danger" title="Hapus" aria-label="Hapus"><Trash2 className="w-4 h-4" strokeWidth={2.75} /></button>
+                  )}
                 </ListActions>
               ),
               slot: "actions",

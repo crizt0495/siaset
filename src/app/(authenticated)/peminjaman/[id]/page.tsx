@@ -8,6 +8,8 @@ import {
   Badge, ButtonLink, Button, DetailRow as Row,
 } from "@/components/ui"
 
+import { useAuthz } from "@/hooks/useAuthz"
+
 interface Peminjaman {
   id: string; barangId: string; jumlahDipinjam: number; peminjam: string
   tanggalPinjam: string; tanggalKembali: string | null; keterangan: string | null
@@ -18,6 +20,7 @@ interface Peminjaman {
 
 export default function PeminjamanDetail() {
   const params = useParams()
+  const { can } = useAuthz()
   const id = params.id as string
   const [data, setData] = useState<Peminjaman | null>(null)
   const [loading, setLoading] = useState(true)
@@ -52,7 +55,7 @@ export default function PeminjamanDetail() {
         desc="Riwayat peminjaman aset"
         extra={<Label color="yellow">03 · Peminjaman</Label>}
       >
-        {data.status === "Dipinjam" && (
+        {data.status === "Dipinjam" && (can("create_peminjaman") || can("edit_peminjaman")) && (
           <Button variant="good" onClick={handleKembalikan}>
             <RotateCcw className="w-4 h-4" strokeWidth={3} /> Kembalikan
           </Button>

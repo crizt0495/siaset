@@ -8,11 +8,14 @@ import {
   Pagination, ConfirmModal, Input, Label,
 } from "@/components/ui"
 
+import { useAuthz } from "@/hooks/useAuthz"
+
 interface Komisi {
   id: string; namaKomisi: string; keterangan: string; _count?: { users: number; barang: number }
 }
 
 export default function KomisiList() {
+  const { can } = useAuthz()
   const [data, setData] = useState<Komisi[]>([])
   const [search, setSearch] = useState("")
   const [page, setPage] = useState(1)
@@ -48,7 +51,7 @@ export default function KomisiList() {
         desc="Kelola komisi & departemen jemaat"
         extra={<Label color="purple">08 · Administrasi</Label>}
       >
-        <AddButton href="/komisi/create">Tambah Komisi</AddButton>
+        {can("create_komisi") && <AddButton href="/komisi/create">Tambah Komisi</AddButton>}
       </PageHeader>
 
       <Card noPad>
@@ -97,8 +100,12 @@ export default function KomisiList() {
               render: (k) => (
                 <ListActions>
                   <Link href={`/komisi/${k.id}`} className="brut-iconbtn brut-iconbtn-primary" title="Detail" aria-label="Detail"><Eye className="w-4 h-4" strokeWidth={2.75} /></Link>
+                  {can("edit_komisi") && (
                   <Link href={`/komisi/${k.id}/edit`} className="brut-iconbtn brut-iconbtn-warn" title="Edit" aria-label="Edit"><Pencil className="w-4 h-4" strokeWidth={2.75} /></Link>
-                  <button onClick={() => setDeleteId(k.id)} className="brut-iconbtn brut-iconbtn-danger" title="Hapus" aria-label="Hapus"><Trash2 className="w-4 h-4" strokeWidth={2.75} /></button>
+                  )}
+                  {can("delete_komisi") && (
+                    <button onClick={() => setDeleteId(k.id)} className="brut-iconbtn brut-iconbtn-danger" title="Hapus" aria-label="Hapus"><Trash2 className="w-4 h-4" strokeWidth={2.75} /></button>
+                  )}
                 </ListActions>
               ),
               slot: "actions",

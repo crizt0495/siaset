@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
+import { forbidden, hasPermission } from "@/lib/authz"
 import { prisma } from "@/lib/prisma"
 
 export async function GET(
@@ -11,6 +12,7 @@ export async function GET(
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+    if (!hasPermission(session.user, "view_peminjaman")) return forbidden()
 
     const { id } = await params
     const peminjaman = await prisma.peminjaman.findUnique({
@@ -47,6 +49,7 @@ export async function PUT(
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+    if (!hasPermission(session.user, "edit_peminjaman")) return forbidden()
 
     const { id } = await params
     const body = await request.json()
@@ -106,6 +109,7 @@ export async function DELETE(
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+    if (!hasPermission(session.user, "delete_peminjaman")) return forbidden()
 
     const { id } = await params
     const existing = await prisma.peminjaman.findUnique({

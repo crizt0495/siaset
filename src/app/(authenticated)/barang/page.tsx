@@ -8,6 +8,8 @@ import {
   Pagination, Badge, ConfirmModal, Input, Select, Label,
 } from "@/components/ui"
 
+import { useAuthz } from "@/hooks/useAuthz"
+
 interface Barang {
   id: string; kodeBarang: string; namaBarang: string; kondisi: string; lokasi: string; status: string; jumlah: number
   komisi?: { namaKomisi: string } | null
@@ -22,6 +24,7 @@ const statusColor: Record<string, "blue" | "yellow" | "default"> = {
 }
 
 export default function BarangList() {
+  const { can } = useAuthz()
   const [data, setData] = useState<Barang[]>([])
   const [komisiList, setKomisiList] = useState<Komisi[]>([])
   const [search, setSearch] = useState("")
@@ -67,7 +70,7 @@ export default function BarangList() {
         desc="Kelola inventaris aset GKJW secara lengkap"
         extra={<Label color="blue">02 · Manajemen Aset</Label>}
       >
-        <AddButton href="/barang/create">Tambah Barang</AddButton>
+        {can("create_barang") && <AddButton href="/barang/create">Tambah Barang</AddButton>}
       </PageHeader>
 
       <Card noPad>
@@ -145,7 +148,9 @@ export default function BarangList() {
                 <ListActions>
                   <Link href={`/barang/${b.id}`} className="brut-iconbtn brut-iconbtn-primary" title="Detail" aria-label="Detail"><Eye className="w-4 h-4" strokeWidth={2.75} /></Link>
                   <Link href={`/barang/${b.id}/edit`} className="brut-iconbtn brut-iconbtn-warn" title="Edit" aria-label="Edit"><Pencil className="w-4 h-4" strokeWidth={2.75} /></Link>
-                  <button onClick={() => setDeleteId(b.id)} className="brut-iconbtn brut-iconbtn-danger" title="Hapus" aria-label="Hapus"><Trash2 className="w-4 h-4" strokeWidth={2.75} /></button>
+                  {can("delete_barang") && (
+                    <button onClick={() => setDeleteId(b.id)} className="brut-iconbtn brut-iconbtn-danger" title="Hapus" aria-label="Hapus"><Trash2 className="w-4 h-4" strokeWidth={2.75} /></button>
+                  )}
                 </ListActions>
               ),
               slot: "actions",

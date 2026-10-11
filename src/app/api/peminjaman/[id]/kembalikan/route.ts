@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
+import { forbidden, hasAnyPermission } from "@/lib/authz"
 import { prisma } from "@/lib/prisma"
 
 export async function POST(
@@ -11,6 +12,8 @@ export async function POST(
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+    if (!hasAnyPermission(session.user, "create_peminjaman", "edit_peminjaman"))
+      return forbidden()
 
     const { id } = await params
     const peminjaman = await prisma.peminjaman.findUnique({

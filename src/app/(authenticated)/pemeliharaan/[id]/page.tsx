@@ -8,8 +8,11 @@ import {
   ButtonLink, DetailRow as Row,
 } from "@/components/ui"
 
+import { useAuthz } from "@/hooks/useAuthz"
+
 export default function PemeliharaanDetail() {
   const params = useParams()
+  const { can } = useAuthz()
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
@@ -35,7 +38,9 @@ export default function PemeliharaanDetail() {
         desc="Riwayat perawatan aset"
         extra={<Label color="green">06 · Pemeliharaan</Label>}
       >
-        <ButtonLink href={`/pemeliharaan/${data.id}/edit`} variant="warn">Edit</ButtonLink>
+        {can("edit_pemeliharaan") && (
+          <ButtonLink href={`/pemeliharaan/${data.id}/edit`} variant="warn">Edit</ButtonLink>
+        )}
       </PageHeader>
 
       <Card

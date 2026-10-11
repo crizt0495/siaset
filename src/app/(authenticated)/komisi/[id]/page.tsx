@@ -8,8 +8,11 @@ import {
   Badge, ButtonLink, DetailRow as Row,
 } from "@/components/ui"
 
+import { useAuthz } from "@/hooks/useAuthz"
+
 export default function KomisiDetail() {
   const params = useParams()
+  const { can } = useAuthz()
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
@@ -33,7 +36,9 @@ export default function KomisiDetail() {
         desc="Informasi komisi"
         extra={<Label color="purple">08 · Komisi</Label>}
       >
-        <ButtonLink href={`/komisi/${data.id}/edit`} variant="warn">Edit</ButtonLink>
+        {can("edit_komisi") && (
+          <ButtonLink href={`/komisi/${data.id}/edit`} variant="warn">Edit</ButtonLink>
+        )}
       </PageHeader>
 
       <Card

@@ -8,6 +8,8 @@ import {
   Pagination, ConfirmModal, Input, Label,
 } from "@/components/ui"
 
+import { useAuthz } from "@/hooks/useAuthz"
+
 interface Pemeliharaan {
   id: string; tanggal: string; biaya: number; keterangan: string
   barang?: { id: string; namaBarang: string; kodeBarang: string } | null
@@ -15,6 +17,7 @@ interface Pemeliharaan {
 }
 
 export default function PemeliharaanList() {
+  const { can } = useAuthz()
   const [data, setData] = useState<Pemeliharaan[]>([])
   const [search, setSearch] = useState("")
   const [page, setPage] = useState(1)
@@ -52,7 +55,7 @@ export default function PemeliharaanList() {
         desc="Tracking biaya perawatan aset"
         extra={<Label color="good">06 · Manajemen Lainnya</Label>}
       >
-        <AddButton href="/pemeliharaan/create">Tambah Pemeliharaan</AddButton>
+        {can("create_pemeliharaan") && <AddButton href="/pemeliharaan/create">Tambah Pemeliharaan</AddButton>}
       </PageHeader>
 
       <Card noPad>
@@ -113,8 +116,12 @@ export default function PemeliharaanList() {
               render: (p) => (
                 <ListActions>
                   <Link href={`/pemeliharaan/${p.id}`} className="brut-iconbtn brut-iconbtn-primary" title="Detail" aria-label="Detail"><Eye className="w-4 h-4" strokeWidth={2.75} /></Link>
+                  {can("edit_pemeliharaan") && (
                   <Link href={`/pemeliharaan/${p.id}/edit`} className="brut-iconbtn brut-iconbtn-warn" title="Edit" aria-label="Edit"><Pencil className="w-4 h-4" strokeWidth={2.75} /></Link>
-                  <button onClick={() => setDeleteId(p.id)} className="brut-iconbtn brut-iconbtn-danger" title="Hapus" aria-label="Hapus"><Trash2 className="w-4 h-4" strokeWidth={2.75} /></button>
+                  )}
+                  {can("delete_pemeliharaan") && (
+                    <button onClick={() => setDeleteId(p.id)} className="brut-iconbtn brut-iconbtn-danger" title="Hapus" aria-label="Hapus"><Trash2 className="w-4 h-4" strokeWidth={2.75} /></button>
+                  )}
                 </ListActions>
               ),
               slot: "actions",

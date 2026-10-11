@@ -8,6 +8,8 @@ import {
   Pagination, ConfirmModal, Input, Select, Badge, Label,
 } from "@/components/ui"
 
+import { useAuthz } from "@/hooks/useAuthz"
+
 interface Peminjaman {
   id: string; barangId: string; jumlahDipinjam: number; peminjam: string
   tanggalPinjam: string; tanggalKembali: string | null; keterangan: string | null
@@ -21,6 +23,7 @@ const statusColor: Record<string, "yellow" | "green" | "default"> = {
 }
 
 export default function PeminjamanList() {
+  const { can } = useAuthz()
   const [data, setData] = useState<Peminjaman[]>([])
   const [search, setSearch] = useState("")
   const [filterStatus, setFilterStatus] = useState("")
@@ -65,7 +68,7 @@ export default function PeminjamanList() {
         desc="Pinjam / kembalikan aset dengan stok otomatis"
         extra={<Label color="warn">03 · Manajemen Aset</Label>}
       >
-        <AddButton href="/peminjaman/create">Tambah Peminjaman</AddButton>
+        {can("create_peminjaman") && <AddButton href="/peminjaman/create">Tambah Peminjaman</AddButton>}
       </PageHeader>
 
       <Card noPad>
@@ -134,13 +137,17 @@ export default function PeminjamanList() {
               render: (p) => (
                 <ListActions>
                   <Link href={`/peminjaman/${p.id}`} className="brut-iconbtn brut-iconbtn-primary" title="Detail" aria-label="Detail"><Eye className="w-4 h-4" strokeWidth={2.75} /></Link>
-                  <Link href={`/peminjaman/${p.id}/edit`} className="brut-iconbtn brut-iconbtn-warn" title="Edit" aria-label="Edit"><Pencil className="w-4 h-4" strokeWidth={2.75} /></Link>
-                  {p.status === "Dipinjam" && (
+                  {can("edit_peminjaman") && (
+                    <Link href={`/peminjaman/${p.id}/edit`} className="brut-iconbtn brut-iconbtn-warn" title="Edit" aria-label="Edit"><Pencil className="w-4 h-4" strokeWidth={2.75} /></Link>
+                  )}
+                  {p.status === "Dipinjam" && (can("create_peminjaman") || can("edit_peminjaman")) && (
                     <button onClick={() => handleKembalikan(p.id)} className="brut-iconbtn brut-iconbtn-good" title="Kembalikan" aria-label="Kembalikan">
                       <RotateCcw className="w-4 h-4" strokeWidth={2.75} />
                     </button>
                   )}
-                  <button onClick={() => setDeleteId(p.id)} className="brut-iconbtn brut-iconbtn-danger" title="Hapus" aria-label="Hapus"><Trash2 className="w-4 h-4" strokeWidth={2.75} /></button>
+                  {can("delete_peminjaman") && (
+                    <button onClick={() => setDeleteId(p.id)} className="brut-iconbtn brut-iconbtn-danger" title="Hapus" aria-label="Hapus"><Trash2 className="w-4 h-4" strokeWidth={2.75} /></button>
+                  )}
                 </ListActions>
               ),
               slot: "actions",

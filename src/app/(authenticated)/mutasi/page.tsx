@@ -8,6 +8,8 @@ import {
   Pagination, ConfirmModal, Input, Label,
 } from "@/components/ui"
 
+import { useAuthz } from "@/hooks/useAuthz"
+
 interface Mutasi {
   id: string
   barangId: string
@@ -19,6 +21,7 @@ interface Mutasi {
 }
 
 export default function MutasiList() {
+  const { can } = useAuthz()
   const [data, setData] = useState<Mutasi[]>([])
   const [search, setSearch] = useState("")
   const [page, setPage] = useState(1)
@@ -66,7 +69,7 @@ export default function MutasiList() {
         desc="Perpindahan lokasi aset antar komisi"
         extra={<Label color="blue">04 · Manajemen Aset</Label>}
       >
-        <AddButton href="/mutasi/create">Tambah Mutasi</AddButton>
+        {can("create_mutasi") && <AddButton href="/mutasi/create">Tambah Mutasi</AddButton>}
       </PageHeader>
 
       <Card noPad>
@@ -129,8 +132,12 @@ export default function MutasiList() {
               render: (m) => (
                 <ListActions>
                   <Link href={`/mutasi/${m.id}`} className="brut-iconbtn brut-iconbtn-primary" title="Detail" aria-label="Detail"><Eye className="w-4 h-4" strokeWidth={2.75} /></Link>
+                  {can("edit_mutasi") && (
                   <Link href={`/mutasi/${m.id}/edit`} className="brut-iconbtn brut-iconbtn-warn" title="Edit" aria-label="Edit"><Pencil className="w-4 h-4" strokeWidth={2.75} /></Link>
-                  <button onClick={() => setDeleteId(m.id)} className="brut-iconbtn brut-iconbtn-danger" title="Hapus" aria-label="Hapus"><Trash2 className="w-4 h-4" strokeWidth={2.75} /></button>
+                  )}
+                  {can("delete_mutasi") && (
+                    <button onClick={() => setDeleteId(m.id)} className="brut-iconbtn brut-iconbtn-danger" title="Hapus" aria-label="Hapus"><Trash2 className="w-4 h-4" strokeWidth={2.75} /></button>
+                  )}
                 </ListActions>
               ),
               slot: "actions",

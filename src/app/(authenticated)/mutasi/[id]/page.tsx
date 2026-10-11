@@ -8,6 +8,8 @@ import {
   ButtonLink, Button, ConfirmModal, DetailRow as Row,
 } from "@/components/ui"
 
+import { useAuthz } from "@/hooks/useAuthz"
+
 interface MutasiDetail {
   id: string
   lokasiAsal: string
@@ -31,6 +33,7 @@ interface MutasiDetail {
 
 export default function MutasiDetailPage() {
   const params = useParams()
+  const { can } = useAuthz()
   const router = useRouter()
   const [data, setData] = useState<MutasiDetail | null>(null)
   const [loading, setLoading] = useState(true)
@@ -91,10 +94,14 @@ export default function MutasiDetailPage() {
         desc="Perpindahan lokasi aset"
         extra={<Label color="blue">04 · Mutasi</Label>}
       >
-        <ButtonLink href={`/mutasi/${data.id}/edit`} variant="warn">Edit</ButtonLink>
-        <Button variant="danger" onClick={() => setShowDelete(true)}>
-          {deleteLoading ? "Menghapus..." : "Hapus"}
-        </Button>
+        {can("edit_mutasi") && (
+          <ButtonLink href={`/mutasi/${data.id}/edit`} variant="warn">Edit</ButtonLink>
+        )}
+        {can("delete_mutasi") && (
+          <Button variant="danger" onClick={() => setShowDelete(true)}>
+            {deleteLoading ? "Menghapus..." : "Hapus"}
+          </Button>
+        )}
       </PageHeader>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">

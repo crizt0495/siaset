@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
+import { forbidden, hasPermission } from "@/lib/authz"
 import { prisma } from "@/lib/prisma"
 
 function parseMasaManfaat(value: unknown, fallback: number): number {
@@ -22,6 +23,7 @@ export async function GET(
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+    if (!hasPermission(session.user, "view_barang")) return forbidden()
 
     const { id } = await params
     const barang = await prisma.barang.findUnique({
@@ -59,6 +61,7 @@ export async function PUT(
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+    if (!hasPermission(session.user, "edit_barang")) return forbidden()
 
     const { id } = await params
     const body = await request.json()
@@ -126,6 +129,7 @@ export async function DELETE(
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+    if (!hasPermission(session.user, "delete_barang")) return forbidden()
 
     const { id } = await params
     const existing = await prisma.barang.findUnique({ where: { id } })

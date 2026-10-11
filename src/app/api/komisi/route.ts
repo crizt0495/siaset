@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
+import { forbidden, hasPermission } from "@/lib/authz"
 import { prisma } from "@/lib/prisma"
 
 export async function GET(request: NextRequest) {
@@ -8,6 +9,7 @@ export async function GET(request: NextRequest) {
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+    if (!hasPermission(session.user, "view_komisi")) return forbidden()
 
     const { searchParams } = new URL(request.url)
     const search = searchParams.get("search") || ""
@@ -51,6 +53,7 @@ export async function POST(request: NextRequest) {
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+    if (!hasPermission(session.user, "create_komisi")) return forbidden()
 
     const body = await request.json()
 
